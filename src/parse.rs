@@ -65,7 +65,7 @@ fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
 
     for (raw_datatype, raw_name) in raw_fields {
         let raw_dt = RawDataType::parse(raw_datatype).unwrap();
-        let dt = DataType::Unknwon;
+        let dt = DataType::Raw(RawDataType::Unknown);
 
         fields.push(Field {
             raw_name: raw_name.to_string(),

@@ -1,5 +1,3 @@
-use subenum::subenum;
-
 #[derive(Debug)]
 pub struct Table {
     pub raw_name: String,
@@ -17,20 +15,22 @@ pub struct Field {
     pub datatype: DataType,
 }
 
-#[subenum(RawDataType)]
+#[derive(Debug)]
+pub enum RawDataType {
+    Unknown,
+    Int,
+}
+
 #[derive(Debug)]
 pub enum DataType {
-    #[subenum(RawDataType)]
-    Unknwon,
-    #[subenum(RawDataType)]
-    Int,
+    Raw(RawDataType),
     Inferred(RawDataType),
 }
 
 fn parse_data_type(input: &str) -> Option<DataType> {
     match input {
-        "int" => Some(DataType::Int),
-        "_" => Some(DataType::Unknwon),
+        "int" => Some(DataType::Raw(RawDataType::Int)),
+        "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
 }
@@ -47,8 +47,8 @@ impl RawDataType {
 
         match dt {
             Some(dt) => match dt {
-                DataType::Unknwon => Some(RawDataType::Unknwon),
-                DataType::Int => Some(RawDataType::Int),
+                DataType::Raw(RawDataType::Unknown) => Some(RawDataType::Unknown),
+                DataType::Raw(RawDataType::Int) => Some(RawDataType::Int),
                 DataType::Inferred(_) => None,
             },
             None => None,
