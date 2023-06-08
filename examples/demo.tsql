@@ -1,0 +1,61 @@
+table Mitarbeiter (
+	@primary_key()
+	int svnr,
+	varchar(256) Name
+);
+
+table Filiale (
+	@primary_key()
+	int nr,
+	varchar(512) land,
+	varchar(512) adresse,
+	@foreign_key(Mitarbeiter)
+	_ svnr,
+);
+
+@primary_key(mitarbeiter, filiale)
+table arbeitet (
+	@foreign_key()
+	Mitarbeiter mitarbeiter,
+	@foreign_key()
+	Filiale filiale
+);
+
+@primary_key(filiale, knr)
+table Kassa (
+	@foreign_key()
+	Filiale filiale,
+	int knr,
+	modell modell,
+	bool haupt
+);
+
+@primary_key(kassa, jahr, rnr)
+table Rechnung (
+	@foreign_key()
+	Kassa kassa,
+	date jahr,
+	int rnr,
+	@check(this >= 0 && this < 100)
+	numeric(5, 2) rabatt
+);
+
+@primary_key(vnr, herstellerin, ser_nr)
+table Ware (
+	int vnr,
+	varchar(256) herstellerin,
+	int ser_nr,
+	@check(this ~ '^[A-Z]{4}#[0-9A-Z]{5}')
+	varchar(10) bezeichung,
+	@check(this > 0)
+	numeric(8, 2) preis,
+);
+
+@primary_key(rechnung, ware)
+table enthaelt (
+	@foreign_key()
+	Rechnung rechnung,
+	@foreign_key()
+	Ware ware,
+	int anzahl
+);

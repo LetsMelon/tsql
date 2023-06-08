@@ -1,0 +1,13 @@
+table Hello (
+    int world,
+);
+
+table Lorem (
+    int hello,
+    int world,
+);
+
+table Ipsum (
+    int hello,
+    _ world,
+);
