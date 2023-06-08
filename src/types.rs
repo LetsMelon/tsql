@@ -24,15 +24,13 @@ pub enum DataType {
     Unknwon,
     #[subenum(RawDataType)]
     Int,
-    #[subenum(RawDataType)]
-    UnknownInferred,
     Inferred(RawDataType),
 }
 
 fn parse_data_type(input: &str) -> Option<DataType> {
     match input {
         "int" => Some(DataType::Int),
-        "_" => Some(DataType::UnknownInferred),
+        "_" => Some(DataType::Unknwon),
         _ => None,
     }
 }
@@ -51,7 +49,6 @@ impl RawDataType {
             Some(dt) => match dt {
                 DataType::Unknwon => Some(RawDataType::Unknwon),
                 DataType::Int => Some(RawDataType::Int),
-                DataType::UnknownInferred => Some(RawDataType::UnknownInferred),
                 DataType::Inferred(_) => None,
             },
             None => None,
