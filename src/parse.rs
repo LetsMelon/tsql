@@ -1,7 +1,9 @@
+use nom::branch::alt;
 use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::space1;
+use nom::character::complete::{digit1, space1};
+use nom::combinator::opt;
 use nom::multi::separated_list0;
-use nom::sequence::{delimited, preceded, separated_pair, terminated};
+use nom::sequence::{delimited, pair, preceded, separated_pair, terminated};
 use nom::IResult;
 
 use crate::types::{DataType, Field, RawDataType, Table};
@@ -51,8 +53,11 @@ fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
                 preceded(
                     space1,
                     separated_pair(
-                        // field type
-                        take_while1(get_is_word()),
+                        // field type + arguments
+                        pair(
+                            take_while1(get_is_word()),
+                            opt(delimited(tag("("), digit1, tag(")"))),
+                        ),
                         space1,
                         // field name
                         take_while1(get_is_word()),
@@ -66,8 +71,8 @@ fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
 
     let mut fields = vec![];
 
-    for (raw_datatype, raw_name) in raw_fields {
-        let raw_dt = RawDataType::parse(raw_datatype).unwrap();
+    for ((raw_datatype, argument), raw_name) in raw_fields {
+        let raw_dt = RawDataType::parse(raw_datatype, argument).unwrap();
         let dt = DataType::Raw(RawDataType::Unknown);
 
         fields.push(Field {

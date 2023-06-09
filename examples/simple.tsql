@@ -10,4 +10,5 @@ table Lorem (
 table Ipsum (
     int hello,
     _ world,
+    varchar(12) lorem,
 );

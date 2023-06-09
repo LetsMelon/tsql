@@ -27,6 +27,7 @@ pub enum RawDataType {
     Double,
     Float,
     Uuid,
+    VarChar(usize),
 }
 
 #[derive(Debug)]
@@ -36,26 +37,32 @@ pub enum DataType {
 }
 
 impl DataType {
-    pub fn parse(input: &str) -> Option<Self> {
-        match input {
-            "int" => Some(DataType::Raw(RawDataType::Int)),
-            "bool" => Some(DataType::Raw(RawDataType::Bool)),
-            "bigint" => Some(DataType::Raw(RawDataType::BigInt)),
-            "date" => Some(DataType::Raw(RawDataType::Date)),
-            "datetime" => Some(DataType::Raw(RawDataType::DateTime)),
-            "time" => Some(DataType::Raw(RawDataType::Time)),
-            "double" => Some(DataType::Raw(RawDataType::Double)),
-            "float" => Some(DataType::Raw(RawDataType::Float)),
-            "uuid" => Some(DataType::Raw(RawDataType::Uuid)),
-            "_" => Some(DataType::Raw(RawDataType::Unknown)),
+    pub fn parse(input: &str, argument: Option<&str>) -> Option<Self> {
+        match (input, argument) {
+            ("int", None) => Some(DataType::Raw(RawDataType::Int)),
+            ("bool", None) => Some(DataType::Raw(RawDataType::Bool)),
+            ("bigint", None) => Some(DataType::Raw(RawDataType::BigInt)),
+            ("date", None) => Some(DataType::Raw(RawDataType::Date)),
+            ("datetime", None) => Some(DataType::Raw(RawDataType::DateTime)),
+            ("time", None) => Some(DataType::Raw(RawDataType::Time)),
+            ("double", None) => Some(DataType::Raw(RawDataType::Double)),
+            ("float", None) => Some(DataType::Raw(RawDataType::Float)),
+            ("uuid", None) => Some(DataType::Raw(RawDataType::Uuid)),
+            ("_", None) => Some(DataType::Raw(RawDataType::Unknown)),
+
+            ("varchar", Some(length)) => match length.parse::<usize>() {
+                Ok(l) => Some(DataType::Raw(RawDataType::VarChar(l))),
+                _ => None,
+            },
+
             _ => None,
         }
     }
 }
 
 impl RawDataType {
-    pub fn parse(input: &str) -> Option<Self> {
-        let dt = DataType::parse(input);
+    pub fn parse(input: &str, argument: Option<&str>) -> Option<Self> {
+        let dt = DataType::parse(input, argument);
 
         match dt {
             Some(dt) => match dt {
