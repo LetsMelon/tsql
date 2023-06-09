@@ -14,6 +14,7 @@ pub fn parse(input: &str) -> IResult<&str, Table> {
     // parse name
     let (input, name) = table_name(input)?;
 
+    // parse fields
     let (input, fields) = table_body(input)?;
 
     // end of table
@@ -50,8 +51,10 @@ fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
                 preceded(
                     space1,
                     separated_pair(
+                        // field type
                         take_while1(get_is_word()),
                         space1,
+                        // field name
                         take_while1(get_is_word()),
                     ),
                 ),
