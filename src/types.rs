@@ -28,6 +28,7 @@ pub enum RawDataType {
     Float,
     Uuid,
     VarChar(usize),
+    Char(usize),
 }
 
 #[derive(Debug)]
@@ -50,8 +51,12 @@ impl DataType {
             ("uuid", None) => Some(DataType::Raw(RawDataType::Uuid)),
             ("_", None) => Some(DataType::Raw(RawDataType::Unknown)),
 
-            ("varchar", Some(length)) => match length.parse::<usize>() {
+            ("varchar", Some(length)) => match length.parse() {
                 Ok(l) => Some(DataType::Raw(RawDataType::VarChar(l))),
+                _ => None,
+            },
+            ("char", Some(length)) => match length.parse() {
+                Ok(l) => Some(DataType::Raw(RawDataType::Char(l))),
                 _ => None,
             },
 
