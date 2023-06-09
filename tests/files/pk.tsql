@@ -1,0 +1,13 @@
+@primary_key(id)
+table Human (
+    int id,
+    varchar(32) name,
+    date birth,
+);
+
+@primary_key(start, end)
+table Termin (
+    datetime start,
+    datetime end,
+    varchar(16) description,
+);

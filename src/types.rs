@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Table {
+    pub extra: TableExtra,
+
     pub raw_name: String,
     pub name: String,
 
@@ -85,4 +87,9 @@ impl RawDataType {
             None => None,
         }
     }
+}
+
+#[derive(Debug, Default)]
+pub struct TableExtra {
+    pub primary_key: Vec<String>,
 }

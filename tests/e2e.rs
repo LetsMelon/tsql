@@ -90,3 +90,23 @@ fn all_types() {
         RawDataType::Text(1024)
     );
 }
+
+#[test]
+fn parse_pks() {
+    let path = Path::new("./tests/files/pk.tsql");
+
+    let out = parse_file(path);
+    assert!(out.is_ok());
+
+    let tables = out.unwrap();
+
+    let all_table = tables.get("Human");
+    assert!(all_table.is_some());
+    let table = all_table.unwrap();
+    assert_eq!(table.extra.primary_key, ["id"]);
+
+    let all_table = tables.get("Termin");
+    assert!(all_table.is_some());
+    let table = all_table.unwrap();
+    assert_eq!(table.extra.primary_key, ["start", "end"]);
+}
