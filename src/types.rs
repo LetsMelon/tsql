@@ -45,7 +45,7 @@ fn parse_data_type(input: &str) -> Option<DataType> {
         "time" => Some(DataType::Raw(RawDataType::Time)),
         "double" => Some(DataType::Raw(RawDataType::Double)),
         "float" => Some(DataType::Raw(RawDataType::Float)),
-        "uuid" => Some(DataType::Raw(RawDataType::Float)),
+        "uuid" => Some(DataType::Raw(RawDataType::Uuid)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
