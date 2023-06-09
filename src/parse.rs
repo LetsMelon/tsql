@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{digit1, space1};
+use nom::character::complete::{digit1, multispace0, space1};
 use nom::combinator::opt;
 use nom::multi::separated_list0;
 use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
@@ -44,7 +44,7 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
             delimited(
                 tag("("),
                 separated_list0(
-                    tuple((opt(space1), tag(","), opt(space1))),
+                    tuple((multispace0, tag(","), multispace0)),
                     take_while1(get_is_word()),
                 ),
                 tag(")"),
