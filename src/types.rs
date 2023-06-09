@@ -21,6 +21,9 @@ pub enum RawDataType {
     Int,
     Bool,
     BigInt,
+    Date,
+    DateTime,
+    Time,
 }
 
 #[derive(Debug)]
@@ -34,6 +37,9 @@ fn parse_data_type(input: &str) -> Option<DataType> {
         "int" => Some(DataType::Raw(RawDataType::Int)),
         "bool" => Some(DataType::Raw(RawDataType::Bool)),
         "bigint" => Some(DataType::Raw(RawDataType::BigInt)),
+        "date" => Some(DataType::Raw(RawDataType::Date)),
+        "datetime" => Some(DataType::Raw(RawDataType::DateTime)),
+        "time" => Some(DataType::Raw(RawDataType::Time)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
