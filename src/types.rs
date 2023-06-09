@@ -35,25 +35,21 @@ pub enum DataType {
     Inferred(RawDataType),
 }
 
-fn parse_data_type(input: &str) -> Option<DataType> {
-    match input {
-        "int" => Some(DataType::Raw(RawDataType::Int)),
-        "bool" => Some(DataType::Raw(RawDataType::Bool)),
-        "bigint" => Some(DataType::Raw(RawDataType::BigInt)),
-        "date" => Some(DataType::Raw(RawDataType::Date)),
-        "datetime" => Some(DataType::Raw(RawDataType::DateTime)),
-        "time" => Some(DataType::Raw(RawDataType::Time)),
-        "double" => Some(DataType::Raw(RawDataType::Double)),
-        "float" => Some(DataType::Raw(RawDataType::Float)),
-        "uuid" => Some(DataType::Raw(RawDataType::Uuid)),
-        "_" => Some(DataType::Raw(RawDataType::Unknown)),
-        _ => None,
-    }
-}
-
 impl DataType {
     pub fn parse(input: &str) -> Option<Self> {
-        parse_data_type(input)
+        match input {
+            "int" => Some(DataType::Raw(RawDataType::Int)),
+            "bool" => Some(DataType::Raw(RawDataType::Bool)),
+            "bigint" => Some(DataType::Raw(RawDataType::BigInt)),
+            "date" => Some(DataType::Raw(RawDataType::Date)),
+            "datetime" => Some(DataType::Raw(RawDataType::DateTime)),
+            "time" => Some(DataType::Raw(RawDataType::Time)),
+            "double" => Some(DataType::Raw(RawDataType::Double)),
+            "float" => Some(DataType::Raw(RawDataType::Float)),
+            "uuid" => Some(DataType::Raw(RawDataType::Uuid)),
+            "_" => Some(DataType::Raw(RawDataType::Unknown)),
+            _ => None,
+        }
     }
 }
 
