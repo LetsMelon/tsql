@@ -19,6 +19,7 @@ pub struct Field {
 pub enum RawDataType {
     Unknown,
     Int,
+    Bool,
 }
 
 #[derive(Debug)]
@@ -30,6 +31,7 @@ pub enum DataType {
 fn parse_data_type(input: &str) -> Option<DataType> {
     match input {
         "int" => Some(DataType::Raw(RawDataType::Int)),
+        "bool" => Some(DataType::Raw(RawDataType::Bool)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
@@ -47,8 +49,7 @@ impl RawDataType {
 
         match dt {
             Some(dt) => match dt {
-                DataType::Raw(RawDataType::Unknown) => Some(RawDataType::Unknown),
-                DataType::Raw(RawDataType::Int) => Some(RawDataType::Int),
+                DataType::Raw(rdt) => Some(rdt),
                 DataType::Inferred(_) => None,
             },
             None => None,
