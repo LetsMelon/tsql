@@ -24,6 +24,8 @@ pub enum RawDataType {
     Date,
     DateTime,
     Time,
+    Double,
+    Float,
 }
 
 #[derive(Debug)]
@@ -40,6 +42,8 @@ fn parse_data_type(input: &str) -> Option<DataType> {
         "date" => Some(DataType::Raw(RawDataType::Date)),
         "datetime" => Some(DataType::Raw(RawDataType::DateTime)),
         "time" => Some(DataType::Raw(RawDataType::Time)),
+        "double" => Some(DataType::Raw(RawDataType::Double)),
+        "float" => Some(DataType::Raw(RawDataType::Float)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
