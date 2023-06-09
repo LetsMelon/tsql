@@ -28,9 +28,9 @@ pub enum RawDataType {
     Float,
     Uuid,
 
-    VarChar(usize),
-    Char(usize),
-    Text(usize),
+    VarChar(u16),
+    Char(u8),
+    Text(u16),
 }
 
 #[derive(Debug)]
