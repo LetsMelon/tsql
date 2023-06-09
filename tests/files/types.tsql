@@ -11,3 +11,18 @@ table Ipsum (
     int hello,
     varchar(12) lorem,
 );
+
+table All (
+    int lorem,
+    bool ipsum,
+    bigint dolor,
+    date sit,
+    datetime amet,
+    time consetetur,
+    double elitr,
+    float sed,
+    uuid diam,
+    varchar(16000) nonumy,
+    char(200) eiromod,
+    text(1024) labore,
+);
