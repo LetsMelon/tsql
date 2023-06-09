@@ -27,8 +27,10 @@ pub enum RawDataType {
     Double,
     Float,
     Uuid,
+
     VarChar(usize),
     Char(usize),
+    Text(usize),
 }
 
 #[derive(Debug)]
@@ -57,6 +59,10 @@ impl DataType {
             },
             ("char", Some(length)) => match length.parse() {
                 Ok(l) => Some(DataType::Raw(RawDataType::Char(l))),
+                _ => None,
+            },
+            ("text", Some(length)) => match length.parse() {
+                Ok(l) => Some(DataType::Raw(RawDataType::Text(l))),
                 _ => None,
             },
 
