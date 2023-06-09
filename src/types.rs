@@ -26,6 +26,7 @@ pub enum RawDataType {
     Time,
     Double,
     Float,
+    Uuid,
 }
 
 #[derive(Debug)]
@@ -44,6 +45,7 @@ fn parse_data_type(input: &str) -> Option<DataType> {
         "time" => Some(DataType::Raw(RawDataType::Time)),
         "double" => Some(DataType::Raw(RawDataType::Double)),
         "float" => Some(DataType::Raw(RawDataType::Float)),
+        "uuid" => Some(DataType::Raw(RawDataType::Float)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
