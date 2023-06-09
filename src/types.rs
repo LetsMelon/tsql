@@ -20,6 +20,7 @@ pub enum RawDataType {
     Unknown,
     Int,
     Bool,
+    BigInt,
 }
 
 #[derive(Debug)]
@@ -32,6 +33,7 @@ fn parse_data_type(input: &str) -> Option<DataType> {
     match input {
         "int" => Some(DataType::Raw(RawDataType::Int)),
         "bool" => Some(DataType::Raw(RawDataType::Bool)),
+        "bigint" => Some(DataType::Raw(RawDataType::BigInt)),
         "_" => Some(DataType::Raw(RawDataType::Unknown)),
         _ => None,
     }
