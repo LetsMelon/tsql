@@ -1,4 +1,3 @@
-use nom::branch::alt;
 use nom::bytes::complete::{tag, take_while1};
 use nom::character::complete::{digit1, space1};
 use nom::combinator::opt;
