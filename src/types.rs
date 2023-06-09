@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct Table {
     pub raw_name: String,
     pub name: String,
 
-    pub fields: Vec<Field>,
+    pub fields: HashMap<String, Field>,
 }
 
 #[derive(Debug)]
@@ -15,7 +17,7 @@ pub struct Field {
     pub datatype: DataType,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RawDataType {
     Unknown,
     Int,
@@ -33,7 +35,7 @@ pub enum RawDataType {
     Text(u16),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DataType {
     Raw(RawDataType),
     Inferred(RawDataType),

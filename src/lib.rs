@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -7,18 +8,23 @@ use types::Table;
 use crate::parse::parse;
 
 mod parse;
-mod types;
+pub mod types;
 
-pub fn parse_str(mut content: String) -> Result<Vec<Table>> {
-    let mut tables = vec![];
+pub type TableCollection = HashMap<String, Table>;
+
+pub fn parse_str(mut content: String) -> Result<TableCollection> {
+    let mut tables = HashMap::new();
 
     while content.len() != 0 {
         let out = parse(&content);
 
         match out {
-            Ok(sth) => {
-                let c = sth.0.to_string().clone();
-                tables.push(sth.1);
+            Ok((c, table)) => {
+                let c = c.to_string().clone();
+
+                let name = table.name.clone();
+                tables.insert(name, table);
+
                 content = c;
             }
             Err(err) => bail!(format!("{:?}", err)),
@@ -28,8 +34,8 @@ pub fn parse_str(mut content: String) -> Result<Vec<Table>> {
     Ok(tables)
 }
 
-pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Table>> {
-    let content = read_to_string(path).unwrap().replace("\n", "");
+pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
+    let content = read_to_string(path)?.replace("\n", "");
 
     parse_str(content)
 }

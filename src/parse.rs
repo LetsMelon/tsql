@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use nom::bytes::complete::{tag, take_while1};
 use nom::character::complete::{digit1, space1};
 use nom::combinator::opt;
@@ -41,7 +43,7 @@ fn get_is_word() -> impl Fn(char) -> bool {
     |c| char::is_alphabetic(c) || c == '_'
 }
 
-fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
+fn table_body(input: &str) -> IResult<&str, HashMap<String, Field>> {
     let (input, _) = space1(input)?;
 
     let (input, raw_fields) = delimited(
@@ -68,18 +70,21 @@ fn table_body(input: &str) -> IResult<&str, Vec<Field>> {
         tag(")"),
     )(input)?;
 
-    let mut fields = vec![];
+    let mut fields = HashMap::new();
 
     for ((raw_datatype, argument), raw_name) in raw_fields {
         let raw_dt = RawDataType::parse(raw_datatype, argument).unwrap();
         let dt = DataType::Raw(RawDataType::Unknown);
 
-        fields.push(Field {
-            raw_name: raw_name.to_string(),
-            name: raw_name.to_string(),
-            raw_datatype: raw_dt,
-            datatype: dt,
-        });
+        fields.insert(
+            raw_name.to_string(),
+            Field {
+                raw_name: raw_name.to_string(),
+                name: raw_name.to_string(),
+                raw_datatype: raw_dt,
+                datatype: dt,
+            },
+        );
     }
 
     Ok((input, fields))
