@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - "**.rs"
+      - "**Cargo.**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "**.rs"
+      - "**Cargo.**"
+      - ".github/workflows/ci.yml"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo-nextest
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-nextest
+          locked: true
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --verbose --all-targets --all --all-features
+        env:
+          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
+
+      - name: Test
+        run: cargo nextest run --all-features --all
+        env:
+          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
