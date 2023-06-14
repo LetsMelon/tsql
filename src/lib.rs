@@ -1,19 +1,21 @@
-use std::collections::HashMap;
+#![feature(variant_count)]
+
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::fs::read_to_string;
 use std::path::Path;
+use std::rc::Rc;
 
 use anyhow::{bail, Result};
-use types::Table;
+use types::{Table, TableCollection};
 
-use crate::parse::parse;
+use crate::parser::parse;
 
-mod parse;
+mod parser;
 pub mod types;
 
-pub type TableCollection = HashMap<String, Table>;
-
 pub fn parse_str(mut content: String) -> Result<TableCollection> {
-    let mut tables = HashMap::new();
+    let mut raw_tables = BTreeMap::new();
 
     while content.len() != 0 {
         let out = parse(&content);
@@ -23,7 +25,7 @@ pub fn parse_str(mut content: String) -> Result<TableCollection> {
                 let c = c.to_string().clone();
 
                 let name = table.name.clone();
-                tables.insert(name, table);
+                raw_tables.insert(name, Rc::new(RefCell::new(table)));
 
                 content = c;
             }
@@ -31,7 +33,7 @@ pub fn parse_str(mut content: String) -> Result<TableCollection> {
         }
     }
 
-    Ok(tables)
+    Table::parse_raw_tables(raw_tables)
 }
 
 pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {

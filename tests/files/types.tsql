@@ -1,18 +1,18 @@
-table Hello (
+table Hello {
     int world,
-);
+};
 
-table Lorem (
+table Lorem {
     int hello,
     int world,
-);
+};
 
-table Ipsum (
+table Ipsum {
     int hello,
     varchar(12) lorem,
-);
+};
 
-table All (
+table All {
     int lorem,
     bool ipsum,
     bigint dolor,
@@ -25,4 +25,4 @@ table All (
     varchar(16000) nonumy,
     char(200) eiromod,
     text(1024) labore,
-);
+};

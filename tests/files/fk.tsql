@@ -11,3 +11,11 @@ table Termin {
     datetime end,
     varchar(16) description,
 };
+
+@primary_key(human_id, termin_start, termin_end)
+table has_appointment {
+    @foreign_key()
+    Human human,
+    @foreign_key()
+    Termin termin,
+};
