@@ -7,18 +7,9 @@ use static_assertions::const_assert_eq;
 
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable, TableExtra};
 
-#[derive(Debug, Default)]
-pub struct Table {
-    pub extra: TableExtra,
-
-    pub name: String,
-
-    pub fields: HashMap<String, Field>,
-}
-
 pub type GenericCollection<T> = BTreeMap<String, T>;
 pub type TableCollection = GenericCollection<Table>;
-pub type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
+pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
 fn get_first_element<'a, K: Ord, V>(collection: &'a BTreeMap<K, V>) -> Option<(&'a K, &'a V)> {
     let key = collection.keys().next();
@@ -32,8 +23,17 @@ fn get_first_element<'a, K: Ord, V>(collection: &'a BTreeMap<K, V>) -> Option<(&
     Some((key, collection.get(key).unwrap()))
 }
 
+#[derive(Debug, Default)]
+pub struct Table {
+    pub(crate) extra: TableExtra,
+
+    pub(crate) name: String,
+
+    pub(crate) fields: HashMap<String, Field>,
+}
+
 impl Table {
-    pub fn parse_raw_tables(mut raw_tables: RawTableCollection) -> Result<TableCollection> {
+    pub(crate) fn parse_raw_tables(mut raw_tables: RawTableCollection) -> Result<TableCollection> {
         let mut parsed = TableCollection::new();
 
         let mut raw_tables_order: VecDeque<Rc<RefCell<RawTable>>> =
@@ -86,7 +86,10 @@ impl Table {
         Ok(parsed)
     }
 
-    fn parse(raw: Rc<RefCell<RawTable>>, parsed_tables: &TableCollection) -> Result<Self> {
+    pub(crate) fn parse(
+        raw: Rc<RefCell<RawTable>>,
+        parsed_tables: &TableCollection,
+    ) -> Result<Self> {
         let mut parsed_table = Table::default();
 
         let raw = raw.borrow();
@@ -151,10 +154,10 @@ impl Table {
 
 #[derive(Debug, Clone)]
 pub struct Field {
-    pub name: String,
-    pub datatype: DataType,
+    pub(crate) name: String,
+    pub(crate) datatype: DataType,
     // TODO change Rc<Field> to Box<Field>
-    pub foreign_key_reference: Option<(String, Rc<Field>)>,
+    pub(crate) foreign_key_reference: Option<(String, Rc<Field>)>,
 }
 
 impl Field {
