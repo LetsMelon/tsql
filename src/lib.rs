@@ -38,7 +38,8 @@ pub fn parse_str(mut content: String) -> Result<TableCollection> {
 }
 
 pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
-    let content = read_to_string(path)?.replace("\n", "");
+    // TODO check if the `.replace(...)` is unnecessary
+    let content = read_to_string(path)?.replace('\n', "");
 
     parse_str(content)
 }
