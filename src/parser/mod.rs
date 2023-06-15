@@ -55,15 +55,13 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
     let mut table_extra = TableExtra::default();
 
     match item {
-        Some((tag, values)) => match tag {
-            "primary_key" => table_extra.primary_key.append(
-                &mut values
-                    .iter()
-                    .map(|item| item.to_string())
-                    .collect::<Vec<_>>(),
-            ),
-            _ => (),
-        },
+        Some(("primary_key", values)) => table_extra.primary_key.append(
+            &mut values
+                .iter()
+                .map(|item| item.to_string())
+                .collect::<Vec<_>>(),
+        ),
+        Some((tag, _)) => todo!("{}", tag),
         None => (),
     }
 
