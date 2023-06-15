@@ -1,14 +1,14 @@
-table Hello (
+table Hello {
     int world,
-);
+};
 
-table Lorem (
+table Lorem {
     int hello,
     int world,
-);
+};
 
-table Ipsum (
+table Ipsum {
     int hello,
     _ world,
     varchar(12) lorem,
-);
+};
