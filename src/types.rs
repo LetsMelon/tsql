@@ -1,4 +1,4 @@
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::io::Write;
 use std::rc::Rc;
@@ -13,14 +13,8 @@ pub type GenericCollection<T> = BTreeMap<String, T>;
 pub type TableCollection = GenericCollection<Table>;
 pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
-fn get_first_element<'a, K: Ord, V>(collection: &'a BTreeMap<K, V>) -> Option<(&'a K, &'a V)> {
-    let key = collection.keys().next();
-
-    if key.is_none() {
-        return None;
-    }
-
-    let key = key.unwrap();
+fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)> {
+    let key = collection.keys().next()?;
 
     Some((key, collection.get(key).unwrap()))
 }
@@ -49,10 +43,7 @@ impl Table {
         let mut raw_tables_order: VecDeque<Rc<RefCell<RawTable>>> =
             VecDeque::with_capacity(raw_tables.len());
 
-        // TODO use while let
-        while raw_tables.len() != 0 {
-            let (name, table) = get_first_element(&raw_tables).unwrap();
-
+        while let Some((name, table)) = get_first_element(&raw_tables) {
             let name = name.clone();
             let table = table.clone();
 
@@ -106,7 +97,7 @@ impl Table {
 
         parsed_table.name = raw.name.clone();
 
-        for (_, field_type) in &raw.fields {
+        for field_type in raw.fields.values() {
             match field_type {
                 FieldType::Real(raw_field) => {
                     parsed_table
@@ -166,7 +157,7 @@ impl TransformSQL for Table {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
         writeln!(buffer, "CREATE TABLE {} (", self.name)?;
 
-        for (_, field) in &self.fields {
+        for field in self.fields.values() {
             field.transform(buffer)?;
         }
 

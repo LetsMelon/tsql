@@ -55,15 +55,13 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
     let mut table_extra = TableExtra::default();
 
     match item {
-        Some((tag, values)) => match tag {
-            "primary_key" => table_extra.primary_key.append(
-                &mut values
-                    .iter()
-                    .map(|item| item.to_string())
-                    .collect::<Vec<_>>(),
-            ),
-            _ => (),
-        },
+        Some(("primary_key", values)) => table_extra.primary_key.append(
+            &mut values
+                .iter()
+                .map(|item| item.to_string())
+                .collect::<Vec<_>>(),
+        ),
+        Some((tag, _)) => todo!("{}", tag),
         None => (),
     }
 
@@ -112,15 +110,7 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
     for ((field_extra, _, field_type, field_type_arguments), field_name) in raw_list {
         let parsed_type = RawDataType::parse(field_type, field_type_arguments).unwrap();
 
-        if field_extra.is_none() {
-            fields.insert(
-                field_name.to_string(),
-                FieldType::Real(RawField {
-                    name: field_name.to_string(),
-                    datatype: parsed_type,
-                }),
-            );
-        } else {
+        if let Some(field_extra) = field_extra {
             fields.insert(
                 field_name.to_string(),
                 FieldType::Virtual((
@@ -128,8 +118,16 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
                         name: field_name.to_string(),
                         datatype: parsed_type,
                     },
-                    field_extra.unwrap(),
+                    field_extra,
                 )),
+            );
+        } else {
+            fields.insert(
+                field_name.to_string(),
+                FieldType::Real(RawField {
+                    name: field_name.to_string(),
+                    datatype: parsed_type,
+                }),
             );
         }
     }
