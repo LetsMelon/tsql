@@ -163,8 +163,6 @@ impl TransformSQL for Table {
             field.transform(buffer)?;
 
             if field.foreign_key_reference.is_some() {
-                println!("{:?}", field);
-
                 let table = &field.foreign_key_reference.as_ref().unwrap().0;
 
                 match foreign_keys_table_fields.get_mut(table) {
