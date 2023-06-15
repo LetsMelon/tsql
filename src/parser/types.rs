@@ -11,7 +11,7 @@ pub struct RawTable {
 
 impl RawTable {
     pub fn has_fk(&self) -> bool {
-        self.fk_tables().len() != 0
+        !self.fk_tables().is_empty()
     }
 
     pub fn fk_tables(&self) -> Vec<String> {
