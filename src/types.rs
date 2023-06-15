@@ -14,13 +14,7 @@ pub type TableCollection = GenericCollection<Table>;
 pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
 fn get_first_element<'a, K: Ord, V>(collection: &'a BTreeMap<K, V>) -> Option<(&'a K, &'a V)> {
-    let key = collection.keys().next();
-
-    if key.is_none() {
-        return None;
-    }
-
-    let key = key.unwrap();
+    let key = collection.keys().next()?;
 
     Some((key, collection.get(key).unwrap()))
 }
