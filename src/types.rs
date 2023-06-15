@@ -106,7 +106,7 @@ impl Table {
 
         parsed_table.name = raw.name.clone();
 
-        for (_, field_type) in &raw.fields {
+        for field_type in raw.fields.values() {
             match field_type {
                 FieldType::Real(raw_field) => {
                     parsed_table
@@ -166,7 +166,7 @@ impl TransformSQL for Table {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
         writeln!(buffer, "CREATE TABLE {} (", self.name)?;
 
-        for (_, field) in &self.fields {
+        for field in self.fields.values() {
             field.transform(buffer)?;
         }
 
