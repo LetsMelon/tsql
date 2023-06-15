@@ -49,10 +49,7 @@ impl Table {
         let mut raw_tables_order: VecDeque<Rc<RefCell<RawTable>>> =
             VecDeque::with_capacity(raw_tables.len());
 
-        // TODO use while let
-        while raw_tables.len() != 0 {
-            let (name, table) = get_first_element(&raw_tables).unwrap();
-
+        while let Some((name, table)) = get_first_element(&raw_tables) {
             let name = name.clone();
             let table = table.clone();
 
