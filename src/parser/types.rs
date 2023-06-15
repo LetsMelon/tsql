@@ -17,7 +17,7 @@ impl RawTable {
     pub fn fk_tables(&self) -> Vec<String> {
         let mut table_names = Vec::with_capacity(self.fields.len());
 
-        for (_, field_type) in &self.fields {
+        for field_type in self.fields.values() {
             match field_type {
                 FieldType::Real(_) => (),
                 FieldType::Virtual((field, FieldExtra::ForeignKey)) => match &field.datatype {
