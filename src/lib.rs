@@ -18,7 +18,7 @@ pub mod types;
 pub fn parse_str(mut content: String) -> Result<TableCollection> {
     let mut raw_tables = BTreeMap::new();
 
-    while content.len() != 0 {
+    while !content.is_empty() {
         let out = parse(&content);
 
         match out {
