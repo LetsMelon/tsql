@@ -1,11 +1,13 @@
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::io::Write;
 use std::rc::Rc;
 
 use anyhow::{bail, Result};
 use static_assertions::const_assert_eq;
 
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable, TableExtra};
+use crate::TransformSQL;
 
 pub type GenericCollection<T> = BTreeMap<String, T>;
 pub type TableCollection = GenericCollection<Table>;
@@ -33,6 +35,14 @@ pub struct Table {
 }
 
 impl Table {
+    pub fn get_field(&self, key: &str) -> Option<&Field> {
+        self.fields.get(key)
+    }
+
+    pub fn primary_keys(&self) -> &Vec<String> {
+        &self.extra.primary_key
+    }
+
     pub(crate) fn parse_raw_tables(mut raw_tables: RawTableCollection) -> Result<TableCollection> {
         let mut parsed = TableCollection::new();
 
@@ -152,6 +162,23 @@ impl Table {
     }
 }
 
+impl TransformSQL for Table {
+    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        writeln!(buffer, "CREATE TABLE {} (", self.name)?;
+
+        for (_, field) in &self.fields {
+            field.transform(buffer)?;
+        }
+
+        let primary_key_formatted = self.extra.primary_key.join(",");
+        writeln!(buffer, "PRIMARY KEY ({})", primary_key_formatted)?;
+
+        writeln!(buffer, ");")?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) name: String,
@@ -168,9 +195,27 @@ impl Field {
             foreign_key_reference: None,
         })
     }
+
+    pub fn datatype(&self) -> &DataType {
+        &self.datatype
+    }
 }
 
-#[derive(Debug, Clone, Copy)]
+impl TransformSQL for Field {
+    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        write!(buffer, "{} ", self.name)?;
+        self.datatype.transform(buffer)?;
+
+        if self.foreign_key_reference.is_some() {
+            let fk = self.foreign_key_reference.as_ref().unwrap();
+            println!("{:?}", fk);
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DataType {
     Int,
     Bool,
@@ -213,5 +258,28 @@ impl DataType {
                 bail!("Error: encountered a foreign key. raw: {:?}", raw)
             }
         }
+    }
+}
+
+impl TransformSQL for DataType {
+    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        let formatted = match self {
+            DataType::Int => "int".to_string(),
+            DataType::Bool => "boolean".to_string(),
+            DataType::BigInt => "bigint".to_string(),
+            DataType::Date => "date".to_string(),
+            DataType::DateTime => "datetime".to_string(),
+            DataType::Time => "time".to_string(),
+            DataType::Double => "double".to_string(),
+            DataType::Float => "float".to_string(),
+            DataType::Uuid => "uuid".to_string(),
+            DataType::VarChar(args) => format!("varchar({})", args),
+            DataType::Char(args) => format!("char({})", args),
+            DataType::Text(args) => format!("text({})", args),
+        };
+
+        writeln!(buffer, "{},", formatted)?;
+
+        Ok(())
     }
 }

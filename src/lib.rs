@@ -3,6 +3,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::fs::read_to_string;
+use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -40,4 +41,8 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
     let content = read_to_string(path)?.replace("\n", "");
 
     parse_str(content)
+}
+
+pub trait TransformSQL {
+    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()>;
 }
