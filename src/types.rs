@@ -157,8 +157,45 @@ impl TransformSQL for Table {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
         writeln!(buffer, "CREATE TABLE {} (", self.name)?;
 
+        let mut foreign_keys_table_fields: HashMap<String, Vec<&Field>> = HashMap::new();
+
         for field in self.fields.values() {
             field.transform(buffer)?;
+
+            if field.foreign_key_reference.is_some() {
+                println!("{:?}", field);
+
+                let table = &field.foreign_key_reference.as_ref().unwrap().0;
+
+                match foreign_keys_table_fields.get_mut(table) {
+                    Some(fields_list) => {
+                        fields_list.push(field);
+                    }
+                    None => {
+                        foreign_keys_table_fields.insert(table.to_string(), vec![field]);
+                    }
+                };
+            }
+        }
+
+        for (table_name, fields) in foreign_keys_table_fields {
+            let field_names = fields
+                .iter()
+                .map(|item| item.name.as_str())
+                .collect::<Vec<_>>()
+                .join(",");
+
+            let other_field_names = fields
+                .iter()
+                .map(|item| item.foreign_key_reference.as_ref().unwrap().1.name.clone())
+                .collect::<Vec<_>>()
+                .join(",");
+
+            writeln!(
+                buffer,
+                "FOREIGN KEY ({}) REFERENCES {}({}),",
+                field_names, table_name, other_field_names
+            )?;
         }
 
         let primary_key_formatted = self.extra.primary_key.join(",");
@@ -196,11 +233,6 @@ impl TransformSQL for Field {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{} ", self.name)?;
         self.datatype.transform(buffer)?;
-
-        if self.foreign_key_reference.is_some() {
-            let fk = self.foreign_key_reference.as_ref().unwrap();
-            println!("{:?}", fk);
-        }
 
         Ok(())
     }
