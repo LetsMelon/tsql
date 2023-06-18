@@ -13,7 +13,10 @@ fn e2e_parse_all_files() {
         .unwrap()
         .filter(|item| item.is_ok())
         .map(|item| item.unwrap())
-        .filter(|item| item.path().extension().unwrap() == OsStr::new("tsql"))
+        .filter(|item| match item.path().extension() {
+            Some(ending) if ending == OsStr::new("tsql") => true,
+            _ => false,
+        })
         .map(|item| item.path())
         .collect::<Vec<_>>();
 
