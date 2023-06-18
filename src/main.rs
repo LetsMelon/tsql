@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::process::exit;
 
@@ -31,10 +32,11 @@ fn main() {
 
     let tables = parse_file(&args.tsql_path).unwrap();
 
-    let mut file = File::create(&args.out_path).unwrap();
+    let mut file = BufWriter::new(File::create(&args.out_path).unwrap());
     for (_, table) in tables {
         table.transform(&mut file).unwrap();
     }
+    file.flush().unwrap();
 }
 
 fn parse_args() -> Result<AppArgs, pico_args::Error> {
