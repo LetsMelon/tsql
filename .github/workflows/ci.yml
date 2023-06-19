@@ -48,6 +48,13 @@ jobs:
         env:
           CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
 
+      - name: Create test files
+        working-directory: ./tests/files
+        continue-on-error: true
+        run: |
+          python generate_big.py --name "big_smaller.tsql" --tables 1000 --fields 500
+          python generate_big.py --name "big_170mb.tsql" --tables 4000 --fields 1000
+
       - name: Test
         run: cargo nextest run --all-features --all
         env:
