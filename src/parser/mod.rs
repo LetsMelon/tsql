@@ -79,7 +79,11 @@ fn get_is_word() -> impl Fn(char) -> bool {
 }
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
-    let (input, raw_list) = terminated(
+    // TODO remove types, but rust-analyzer can't figure out the type of `raw_list`
+    let (input, raw_list): (
+        &str,
+        Vec<((Option<FieldExtra>, Option<()>, &str, Option<&str>), &str)>,
+    ) = terminated(
         separated_list0(
             tag(","),
             preceded(
