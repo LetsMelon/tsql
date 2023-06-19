@@ -1,5 +1,7 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
+#[cfg(feature = "profiling")]
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::exit;
 
@@ -22,12 +24,22 @@ struct AppArgs {
 }
 
 fn main() {
+    #[cfg(not(feature = "profiling"))]
     let args = match parse_args() {
         Ok(v) => v,
         Err(e) => {
             eprintln!("Error: {}.", e);
             exit(1);
         }
+    };
+
+    #[cfg(feature = "profiling")]
+    let args = AppArgs {
+        tsql_path: Path::new(
+            "/Users/domenic/Documents/Programming/tsql/tests/files/big_170mb.tsql",
+        )
+        .into(),
+        out_path: Path::new("./samply_out.sql").into(),
     };
 
     let tables = parse_file(&args.tsql_path).unwrap();
