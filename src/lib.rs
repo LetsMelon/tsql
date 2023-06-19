@@ -15,7 +15,7 @@ use crate::parser::parse;
 mod parser;
 pub mod types;
 
-pub fn parse_str(mut content: String) -> Result<TableCollection> {
+pub fn parse_str(mut content: &str) -> Result<TableCollection> {
     let mut raw_tables = BTreeMap::new();
 
     while !content.is_empty() {
@@ -23,8 +23,6 @@ pub fn parse_str(mut content: String) -> Result<TableCollection> {
 
         match out {
             Ok((c, table)) => {
-                let c = c.to_string();
-
                 let name = table.name.clone();
                 raw_tables.insert(name, Rc::new(RefCell::new(table)));
 
@@ -41,7 +39,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
     // TODO check if the `.replace(...)` is necessary
     let content = read_to_string(path)?.replace('\n', "");
 
-    parse_str(content)
+    parse_str(&content)
 }
 
 pub trait TransformSQL {
