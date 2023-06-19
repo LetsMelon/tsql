@@ -1,4 +1,5 @@
 import hashlib
+import sys
 from typing import IO
 
 def number_to_string(number: int) -> str:
@@ -24,11 +25,27 @@ def write_table(file: IO[bytes], fields: int, number: int) -> None:
     file.writelines(lines)
 
 if __name__ == "__main__":
-    file_name = "big.tsql"
+    args = sys.argv[1:]
+
+    if len(args) != 6:
+        HELP = """
+        python3 generate_big.py
+
+        USAGE:
+            python3 generate_big.py --name FILE_NAME --tables TABLE_COUNT --fields FIELDS_COUNT
+        """
+        print(HELP)
+        exit(1)
+
+    args = {args[i].replace("--", ""): args[i + 1] for i in range(0, len(args), 2)}
+
+    file_name = args["name"]
 
     with open(file_name, "w") as file:
-        tables = 1_000
-        fields = 500
+        tables = int(args["tables"])
+        fields = int(args["fields"])
 
         for i in range(1, tables):
             write_table(file, fields, i);
+
+    print(f"Created file: '{file_name}'")
