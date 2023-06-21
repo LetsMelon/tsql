@@ -33,6 +33,22 @@ fn main() {
     let tables = parse_file(&args.tsql_path).unwrap();
 
     let mut file = BufWriter::new(File::create(&args.out_path).unwrap());
+
+    let out = (0..32).map(|_| "=").collect::<Vec<_>>().join("");
+    writeln!(file, "-- {}", &out).unwrap();
+    writeln!(
+        file,
+        "-- Warning! This file has been generated with tsql. Keep in mind that manuel changes will be overridden."
+    )
+    .unwrap();
+    writeln!(
+        file,
+        "-- Executable tsql build with git commit {:?}",
+        env!("GIT_HASH")
+    )
+    .unwrap();
+    writeln!(file, "-- {}", &out).unwrap();
+
     for (_, table) in tables {
         table.transform(&mut file).unwrap();
     }
