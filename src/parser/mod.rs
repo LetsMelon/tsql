@@ -7,13 +7,11 @@ use nom::multi::separated_list0;
 use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
-use self::types::*;
-
+mod helper;
 pub mod types;
 
-fn get_word(input: &str) -> IResult<&str, &str> {
-    take_while1(|c| char::is_alphabetic(c) || c == '_')(input)
-}
+use crate::parser::helper::get_word;
+use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
     let (input, extra) = table_extra(input)?;
