@@ -80,6 +80,11 @@ fn all_types() {
         table.get_field("labore").unwrap().datatype(),
         &DataType::Text(1024)
     );
+
+    assert_eq!(
+        table.get_field("theodor").unwrap().datatype(),
+        &DataType::Decimal(24, 4)
+    );
 }
 
 #[test]
