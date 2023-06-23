@@ -62,6 +62,8 @@ pub enum RawDataType {
     Char(u8),
     Text(u16),
 
+    Decimal(u8, u8),
+
     ForeignKeyTable(String),
 }
 
