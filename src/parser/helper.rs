@@ -1,8 +1,14 @@
 use nom::bytes::complete::take_while1;
+use nom::character::complete::space1;
 use nom::error::context;
+use nom::sequence::preceded;
 use nom::IResult;
 
 // TODO add tests
+/// This function takes an input string and extracts the first word from it.
+///
+/// A word is defined as a sequence of characters separated by underscores.
+///
 /// ## Examples
 /// ```no_run
 /// # use crate::parser::helper::get_word;
@@ -14,6 +20,13 @@ pub fn get_word(input: &str) -> IResult<&str, &str> {
         "get_word",
         take_while1(|c| char::is_alphabetic(c) || c == '_'),
     )(input)
+}
+
+/// This function takes an input string and extracts the first word with a preceded whitespace from it.
+///
+/// For more see [`get_word`].
+pub fn preceded_space_get_word(input: &str) -> IResult<&str, &str> {
+    context("preceded_space_get_word", preceded(space1, get_word))(input)
 }
 
 #[cfg(test)]

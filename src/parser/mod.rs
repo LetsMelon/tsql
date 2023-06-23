@@ -10,7 +10,7 @@ use nom::IResult;
 mod helper;
 pub mod types;
 
-use crate::parser::helper::get_word;
+use crate::parser::helper::{get_word, preceded_space_get_word};
 use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
@@ -20,7 +20,7 @@ pub fn parse(input: &str) -> IResult<&str, RawTable> {
     let (input, _) = tag("table")(input)?;
 
     // parse name
-    let (input, name) = table_name(input)?;
+    let (input, name) = preceded_space_get_word(input)?;
 
     // parse fields
     let (input, fields) = table_body(input)?;
@@ -69,12 +69,6 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
     }
 
     Ok((input, table_extra))
-}
-
-fn table_name(input: &str) -> IResult<&str, &str> {
-    let (input, name) = preceded(space1, get_word)(input)?;
-
-    Ok((input, name))
 }
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
