@@ -11,6 +11,10 @@ use self::types::*;
 
 pub mod types;
 
+fn get_word(input: &str) -> IResult<&str, &str> {
+    take_while1(|c| char::is_alphabetic(c) || c == '_')(input)
+}
+
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
     let (input, extra) = table_extra(input)?;
 
@@ -48,10 +52,7 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
             value(TagHelper::PrimaryKey, tag("primary_key")),
             delimited(
                 tag("("),
-                separated_list0(
-                    tuple((multispace0, tag(","), multispace0)),
-                    take_while1(get_is_word()),
-                ),
+                separated_list0(tuple((multispace0, tag(","), multispace0)), get_word),
                 tag(")"),
             ),
         ),
@@ -73,13 +74,9 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
 }
 
 fn table_name(input: &str) -> IResult<&str, &str> {
-    let (input, name) = preceded(space1, take_while1(get_is_word()))(input)?;
+    let (input, name) = preceded(space1, get_word)(input)?;
 
     Ok((input, name))
-}
-
-fn get_is_word() -> impl Fn(char) -> bool {
-    |c| char::is_alphabetic(c) || c == '_'
 }
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
@@ -100,13 +97,13 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
                         )),
                         opt(value((), space1)),
                         // type
-                        take_while1(get_is_word()),
+                        get_word,
                         // arguments
                         opt(delimited(tag("("), digit1, tag(")"))),
                     )),
                     space1,
                     // field name
-                    take_while1(get_is_word()),
+                    get_word,
                 ),
             ),
         ),
