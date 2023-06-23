@@ -68,33 +68,40 @@ pub enum RawDataType {
 }
 
 impl RawDataType {
-    pub fn parse(input: &str, argument: Option<&str>) -> Option<Self> {
-        match (input, argument) {
-            ("int", None) => Some(RawDataType::Int),
-            ("bool", None) => Some(RawDataType::Bool),
-            ("bigint", None) => Some(RawDataType::BigInt),
-            ("date", None) => Some(RawDataType::Date),
-            ("datetime", None) => Some(RawDataType::DateTime),
-            ("time", None) => Some(RawDataType::Time),
-            ("double", None) => Some(RawDataType::Double),
-            ("float", None) => Some(RawDataType::Float),
-            ("uuid", None) => Some(RawDataType::Uuid),
-            ("_", None) => Some(RawDataType::Unknown),
+    pub fn parse(input: &str, argument: Option<Vec<&str>>) -> Option<Self> {
+        let argument = argument.unwrap_or_default();
 
-            ("varchar", Some(length)) => match length.parse() {
+        match (input, argument.len()) {
+            ("int", 0) => Some(RawDataType::Int),
+            ("bool", 0) => Some(RawDataType::Bool),
+            ("bigint", 0) => Some(RawDataType::BigInt),
+            ("date", 0) => Some(RawDataType::Date),
+            ("datetime", 0) => Some(RawDataType::DateTime),
+            ("time", 0) => Some(RawDataType::Time),
+            ("double", 0) => Some(RawDataType::Double),
+            ("float", 0) => Some(RawDataType::Float),
+            ("uuid", 0) => Some(RawDataType::Uuid),
+            ("_", 0) => Some(RawDataType::Unknown),
+
+            ("varchar", 1) => match argument[0].parse() {
                 Ok(l) => Some(RawDataType::VarChar(l)),
                 _ => None,
             },
-            ("char", Some(length)) => match length.parse() {
+            ("char", 1) => match argument[0].parse() {
                 Ok(l) => Some(RawDataType::Char(l)),
                 _ => None,
             },
-            ("text", Some(length)) => match length.parse() {
+            ("text", 1) => match argument[0].parse() {
                 Ok(l) => Some(RawDataType::Text(l)),
                 _ => None,
             },
 
-            (item, None) => Some(RawDataType::ForeignKeyTable(item.to_string())),
+            ("decimal", 2) => match (argument[0].parse(), argument[1].parse()) {
+                (Ok(precision), Ok(scale)) => Some(RawDataType::Decimal(precision, scale)),
+                _ => None,
+            },
+
+            (item, 0) => Some(RawDataType::ForeignKeyTable(item.to_string())),
 
             _ => None,
         }

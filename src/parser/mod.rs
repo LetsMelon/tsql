@@ -75,7 +75,10 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
     // TODO remove types, but rust-analyzer can't figure out the type of `raw_list`
     let (input, raw_list): (
         &str,
-        Vec<((Option<FieldExtra>, Option<()>, &str, Option<&str>), &str)>,
+        Vec<(
+            (Option<FieldExtra>, Option<()>, &str, Option<Vec<&str>>),
+            &str,
+        )>,
     ) = terminated(
         separated_list0(
             tag(","),
@@ -91,7 +94,11 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
                         // type
                         get_word,
                         // arguments
-                        opt(delimited(tag("("), digit1, tag(")"))),
+                        opt(delimited(
+                            tag("("),
+                            separated_list0(tuple((multispace0, tag(","), multispace0)), digit1),
+                            tag(")"),
+                        )),
                     )),
                     space1,
                     // field name
