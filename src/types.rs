@@ -251,6 +251,9 @@ pub enum DataType {
     VarChar(u16),
     Char(u8),
     Text(u16),
+
+    /// values: `(precision, scale)`
+    Decimal(u8, u8),
 }
 const_assert_eq!(
     std::mem::variant_count::<RawDataType>() - 2,
@@ -274,6 +277,8 @@ impl DataType {
             RawDataType::Char(args) => Ok(DataType::Char(*args)),
             RawDataType::Text(args) => Ok(DataType::Text(*args)),
 
+            RawDataType::Decimal(precision, scale) => Ok(DataType::Decimal(*precision, *scale)),
+
             RawDataType::Unknown => bail!("Error: encountered type unknown. raw: {:?}", raw),
             RawDataType::ForeignKeyTable(_) => {
                 bail!("Error: encountered a foreign key. raw: {:?}", raw)
@@ -294,9 +299,12 @@ impl TransformSQL for DataType {
             DataType::Double => "double".to_string(),
             DataType::Float => "float".to_string(),
             DataType::Uuid => "uuid".to_string(),
+
             DataType::VarChar(args) => format!("varchar({})", args),
             DataType::Char(args) => format!("char({})", args),
             DataType::Text(args) => format!("text({})", args),
+
+            DataType::Decimal(precision, scale) => format!("decimal({}, {})", precision, scale),
         };
 
         writeln!(buffer, "{},", formatted)?;

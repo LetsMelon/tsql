@@ -25,4 +25,5 @@ table All {
     varchar(16000) nonumy,
     char(200) eiromod,
     text(1024) labore,
+    decimal(24, 4) theodor,
 };
