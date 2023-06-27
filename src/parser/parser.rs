@@ -2,7 +2,7 @@ use nom::bytes::complete::{tag, take_while1};
 use nom::character::complete::{digit1, multispace0, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
-use nom::sequence::{delimited, preceded, separated_pair, terminated, tuple};
+use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
 use crate::parser::helper::get_word;
@@ -80,4 +80,24 @@ pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
             tag(CLOSING_BRACKET.to_string().as_str()),
         ),
     )(input)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum TagHelper {
+    PrimaryKey,
+}
+
+// TODO add tests
+pub fn parse_table_extra(input: &str) -> IResult<&str, Option<(TagHelper, Vec<&str>)>> {
+    opt(preceded(
+        tag("@"),
+        pair(
+            value(TagHelper::PrimaryKey, tag("primary_key")),
+            delimited(
+                tag("("),
+                separated_list0(tuple((multispace0, tag(","), multispace0)), get_word),
+                tag(")"),
+            ),
+        ),
+    ))(input)
 }

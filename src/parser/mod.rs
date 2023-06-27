@@ -1,19 +1,14 @@
 use std::collections::HashMap;
 
 use nom::bytes::complete::tag;
-use nom::character::complete::multispace0;
-use nom::combinator::{opt, value};
-use nom::multi::separated_list0;
-use nom::sequence::{delimited, pair, preceded, tuple};
 use nom::IResult;
 
 mod helper;
 mod parser;
 pub mod types;
 
-use self::parser::parse_table_body;
-use crate::parser::helper::{get_word, preceded_space_get_word};
-use crate::parser::parser::parse_table_fields;
+use crate::parser::helper::preceded_space_get_word;
+use crate::parser::parser::{parse_table_body, parse_table_extra, parse_table_fields, TagHelper};
 use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
@@ -42,22 +37,7 @@ pub fn parse(input: &str) -> IResult<&str, RawTable> {
 }
 
 fn table_extra(input: &str) -> IResult<&str, TableExtra> {
-    #[derive(Debug, Clone, Copy)]
-    enum TagHelper {
-        PrimaryKey,
-    }
-
-    let (input, item) = opt(preceded(
-        tag("@"),
-        pair(
-            value(TagHelper::PrimaryKey, tag("primary_key")),
-            delimited(
-                tag("("),
-                separated_list0(tuple((multispace0, tag(","), multispace0)), get_word),
-                tag(")"),
-            ),
-        ),
-    ))(input)?;
+    let (input, item) = parse_table_extra(input)?;
 
     let mut table_extra = TableExtra::default();
 
