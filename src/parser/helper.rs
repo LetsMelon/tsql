@@ -10,8 +10,9 @@ use nom::IResult;
 /// A word is defined as a sequence of characters separated by underscores.
 ///
 /// ## Examples
-/// ```no_run
-/// # use crate::parser::helper::get_word;
+/// ```txt
+/// use crate::parser::helper::get_word;
+///
 /// assert_eq!(get_word("hello world"), Ok((" world", "hello")));
 /// assert_eq!(get_word("hello_world"), Ok(("", "hello_world")));
 /// ```
