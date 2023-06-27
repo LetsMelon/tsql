@@ -2,7 +2,7 @@ use nom::bytes::complete::tag;
 use nom::character::complete::{digit1, multispace0, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
-use nom::sequence::{delimited, preceded, separated_pair, tuple};
+use nom::sequence::{delimited, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
 use crate::parser::helper::get_word;
@@ -16,7 +16,8 @@ pub struct RawParsedField<'a> {
     pub field_name: &'a str,
 }
 
-pub fn parse_single_field(input: &str) -> IResult<&str, RawParsedField> {
+// TODO add tests
+fn parse_single_table_field(input: &str) -> IResult<&str, RawParsedField> {
     let (input, out): (
         &str,
         (
@@ -56,4 +57,12 @@ pub fn parse_single_field(input: &str) -> IResult<&str, RawParsedField> {
             field_name: out.1,
         },
     ))
+}
+
+// TODO add tests
+pub fn parse_table_fields(input: &str) -> IResult<&str, Vec<RawParsedField>> {
+    terminated(
+        separated_list0(tag(","), parse_single_table_field),
+        tag(","),
+    )(input)
 }

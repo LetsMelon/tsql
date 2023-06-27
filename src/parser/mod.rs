@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
 use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{digit1, multispace0, space1};
+use nom::character::complete::{multispace0, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
-use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
+use nom::sequence::{delimited, pair, preceded, tuple};
 use nom::IResult;
 
 mod helper;
 mod parser;
 pub mod types;
 
-use self::parser::{parse_single_field, RawParsedField};
 use crate::parser::helper::{get_word, preceded_space_get_word};
+use crate::parser::parser::parse_table_fields;
 use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
@@ -74,9 +74,7 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
 }
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
-    // TODO remove types, but rust-analyzer can't figure out the type of `raw_list`
-    let (input, raw_list): (&str, Vec<RawParsedField>) =
-        terminated(separated_list0(tag(","), parse_single_field), tag(","))(input)?;
+    let (input, raw_list) = parse_table_fields(input)?;
 
     let mut fields = HashMap::new();
 
