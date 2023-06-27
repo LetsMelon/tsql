@@ -1,4 +1,4 @@
-use nom::bytes::complete::tag;
+use nom::bytes::complete::{tag, take_while1};
 use nom::character::complete::{digit1, multispace0, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
@@ -64,5 +64,20 @@ pub fn parse_table_fields(input: &str) -> IResult<&str, Vec<RawParsedField>> {
     terminated(
         separated_list0(tag(","), parse_single_table_field),
         tag(","),
+    )(input)
+}
+
+// TODO add tests
+pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
+    const OPENING_BRACKET: char = '{';
+    const CLOSING_BRACKET: char = '}';
+
+    preceded(
+        space1,
+        delimited(
+            tag(OPENING_BRACKET.to_string().as_str()),
+            take_while1(|c| c != CLOSING_BRACKET),
+            tag(CLOSING_BRACKET.to_string().as_str()),
+        ),
     )(input)
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{multispace0, space1};
+use nom::bytes::complete::tag;
+use nom::character::complete::multispace0;
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
 use nom::sequence::{delimited, pair, preceded, tuple};
@@ -11,6 +11,7 @@ mod helper;
 mod parser;
 pub mod types;
 
+use self::parser::parse_table_body;
 use crate::parser::helper::{get_word, preceded_space_get_word};
 use crate::parser::parser::parse_table_fields;
 use crate::parser::types::*;
@@ -108,10 +109,7 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
 }
 
 fn table_body(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
-    let (input, raw_body) = preceded(
-        space1,
-        delimited(tag("{"), take_while1(|c| c != '}'), tag("}")),
-    )(input)?;
+    let (input, raw_body) = parse_table_body(input)?;
 
     let (_, fields) = parse_fields(raw_body)?;
 
