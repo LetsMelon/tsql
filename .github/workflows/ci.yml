@@ -14,6 +14,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 
 jobs:
   build:
@@ -27,11 +28,16 @@ jobs:
           toolchain: nightly
           override: true
 
-      - name: Install cargo-nextest
+      - name: Install cargo-binstall
         uses: baptiste0928/cargo-install@v2
         with:
-          crate: cargo-nextest
+          crate: cargo-binstall
           locked: true
+
+      - name: Install rust binaries
+        run: |
+          cargo binstall cargo-tarpaulin
+          cargo binstall cargo-nextest
 
       - uses: actions/cache@v3
         with:
@@ -45,8 +51,6 @@ jobs:
 
       - name: Build
         run: cargo build --verbose --all-targets --all --all-features
-        env:
-          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
 
       - name: Create test files
         working-directory: ./tests/files
@@ -57,5 +61,6 @@ jobs:
 
       - name: Test
         run: cargo nextest run --all-features --all
-        env:
-          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
+
+      - name: Coverage
+        run: cargo tarpaulin --release --all-features --all
