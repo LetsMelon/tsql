@@ -33,8 +33,7 @@ jobs:
 
       - name: Install rust binaries
         run: |
-          cargo binstall cargo-tarpaulin
-          cargo binstall cargo-nextest
+          cargo binstall --no-confirm cargo-tarpaulin cargo-nextest
 
       - uses: actions/cache@v3
         with:
