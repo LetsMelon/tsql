@@ -4,7 +4,6 @@ use nom::error::context;
 use nom::sequence::preceded;
 use nom::IResult;
 
-// TODO add tests
 /// This function takes an input string and extracts the first word from it.
 ///
 /// A word is defined as a sequence of characters separated by underscores.

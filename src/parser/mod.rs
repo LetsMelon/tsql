@@ -8,8 +8,10 @@ use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple
 use nom::IResult;
 
 mod helper;
+mod parser;
 pub mod types;
 
+use self::parser::{parse_single_field, RawParsedField};
 use crate::parser::helper::{get_word, preceded_space_get_word};
 use crate::parser::types::*;
 
@@ -73,53 +75,21 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
     // TODO remove types, but rust-analyzer can't figure out the type of `raw_list`
-    let (input, raw_list): (
-        &str,
-        Vec<(
-            (Option<FieldExtra>, Option<()>, &str, Option<Vec<&str>>),
-            &str,
-        )>,
-    ) = terminated(
-        separated_list0(
-            tag(","),
-            preceded(
-                space1,
-                separated_pair(
-                    tuple((
-                        opt(preceded(
-                            opt(space1),
-                            value(FieldExtra::ForeignKey, tag("@foreign_key()")),
-                        )),
-                        opt(value((), space1)),
-                        // type
-                        get_word,
-                        // arguments
-                        opt(delimited(
-                            tag("("),
-                            separated_list0(tuple((multispace0, tag(","), multispace0)), digit1),
-                            tag(")"),
-                        )),
-                    )),
-                    space1,
-                    // field name
-                    get_word,
-                ),
-            ),
-        ),
-        tag(","),
-    )(input)?;
+    let (input, raw_list): (&str, Vec<RawParsedField>) =
+        terminated(separated_list0(tag(","), parse_single_field), tag(","))(input)?;
 
     let mut fields = HashMap::new();
 
-    for ((field_extra, _, field_type, field_type_arguments), field_name) in raw_list {
-        let parsed_type = RawDataType::parse(field_type, field_type_arguments).unwrap();
+    for raw_item in raw_list {
+        let parsed_type =
+            RawDataType::parse(raw_item.field_type, raw_item.field_type_arguments).unwrap();
 
-        if let Some(field_extra) = field_extra {
+        if let Some(field_extra) = raw_item.field_extra {
             fields.insert(
-                field_name.to_string(),
+                raw_item.field_name.to_string(),
                 FieldType::Virtual((
                     RawField {
-                        name: field_name.to_string(),
+                        name: raw_item.field_name.to_string(),
                         datatype: parsed_type,
                     },
                     field_extra,
@@ -127,9 +97,9 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
             );
         } else {
             fields.insert(
-                field_name.to_string(),
+                raw_item.field_name.to_string(),
                 FieldType::Real(RawField {
-                    name: field_name.to_string(),
+                    name: raw_item.field_name.to_string(),
                     datatype: parsed_type,
                 }),
             );
