@@ -115,3 +115,8 @@ pub struct TableExtra {
 pub enum FieldExtra {
     ForeignKey,
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum TagHelper {
+    PrimaryKey,
+}

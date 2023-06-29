@@ -8,7 +8,7 @@ mod parser;
 pub mod types;
 
 use crate::parser::helper::preceded_space_get_word;
-use crate::parser::parser::{parse_table_body, parse_table_extra, parse_table_fields, TagHelper};
+use crate::parser::parser::{parse_table_body, parse_table_extra, parse_table_fields};
 use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {

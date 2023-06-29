@@ -6,7 +6,7 @@ use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple
 use nom::IResult;
 
 use crate::parser::helper::get_word;
-use crate::parser::types::FieldExtra;
+use crate::parser::types::{FieldExtra, TagHelper};
 
 #[derive(Debug)]
 pub struct RawParsedField<'a> {
@@ -80,11 +80,6 @@ pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
             tag(CLOSING_BRACKET.to_string().as_str()),
         ),
     )(input)
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum TagHelper {
-    PrimaryKey,
 }
 
 // TODO add tests
