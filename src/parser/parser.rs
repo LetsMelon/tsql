@@ -5,6 +5,7 @@ use nom::multi::separated_list0;
 use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
+use super::helper::build_separated_tuple_list;
 use crate::parser::helper::get_word;
 use crate::parser::types::{FieldExtra, TagHelper};
 
@@ -36,11 +37,7 @@ fn parse_single_table_field(input: &str) -> IResult<&str, RawParsedField> {
                 // type
                 get_word,
                 // arguments
-                opt(delimited(
-                    tag("("),
-                    separated_list0(tuple((multispace0, tag(","), multispace0)), digit1),
-                    tag(")"),
-                )),
+                opt(build_separated_tuple_list(digit1)),
             )),
             space1,
             // field name
@@ -88,11 +85,7 @@ pub fn parse_table_extra(input: &str) -> IResult<&str, Option<(TagHelper, Vec<&s
         tag("@"),
         pair(
             value(TagHelper::PrimaryKey, tag("primary_key")),
-            delimited(
-                tag("("),
-                separated_list0(tuple((multispace0, tag(","), multispace0)), get_word),
-                tag(")"),
-            ),
+            build_separated_tuple_list(get_word),
         ),
     ))(input)
 }

@@ -1,8 +1,9 @@
-use nom::bytes::complete::take_while1;
-use nom::character::complete::space1;
+use nom::bytes::complete::{tag, take_while1};
+use nom::character::complete::{multispace0, space1};
 use nom::error::context;
-use nom::sequence::preceded;
-use nom::IResult;
+use nom::multi::separated_list0;
+use nom::sequence::{delimited, preceded, tuple};
+use nom::{IResult, Parser};
 
 /// This function takes an input string and extracts the first word from it.
 ///
@@ -27,6 +28,36 @@ pub fn get_word(input: &str) -> IResult<&str, &str> {
 /// For more see [`get_word`].
 pub fn preceded_space_get_word(input: &str) -> IResult<&str, &str> {
     context("preceded_space_get_word", preceded(space1, get_word))(input)
+}
+
+// TODO add tests
+/// Captures `(...VALUES,)` and parses the elements with `fct` of the list
+pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'a str>>>(
+    input: &'a str,
+    fct: F,
+) -> IResult<&str, Vec<&str>> {
+    context(
+        "separated_tuple_list",
+        delimited(
+            tag("("),
+            separated_list0(tuple((multispace0, tag(","), multispace0)), fct),
+            tag(")"),
+        ),
+    )(input)
+}
+
+// TODO add tests
+#[inline]
+/// Returns a closure of type `Fn(&str) -> IResult<&str, Vec<&str>>` by moving the given `fct` into a closure which calls [`separated_tuple_list`].
+///
+/// For more see [`separated_tuple_list`].
+pub fn build_separated_tuple_list<
+    'a,
+    F: Parser<&'a str, &'a str, nom::error::Error<&'a str>> + Copy,
+>(
+    fct: F,
+) -> impl Fn(&'a str) -> Result<(&'a str, Vec<&'a str>), nom::Err<nom::error::Error<&'a str>>> {
+    move |input| separated_tuple_list(input, fct)
 }
 
 #[cfg(test)]
