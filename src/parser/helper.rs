@@ -53,7 +53,7 @@ pub fn build_generic_delimited<'a, F: FnMut(&'a str) -> IResult<&'a str, T>, T>(
     }
 }
 
-// TODO add tests, use type F from build_generic_closure
+// TODO add tests
 /// Captures `(...VALUES,)` and parses the elements with `fct` of the list
 pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'a str>>>(
     input: &'a str,
@@ -79,7 +79,7 @@ pub fn build_separated_tuple_list<
     F: Parser<&'a str, &'a str, nom::error::Error<&'a str>> + Copy,
 >(
     fct: F,
-) -> impl Fn(&'a str) -> Result<(&'a str, Vec<&'a str>), nom::Err<nom::error::Error<&'a str>>> {
+) -> impl Fn(&'a str) -> IResult<&'a str, Vec<&'a str>> {
     move |input| separated_tuple_list(input, fct)
 }
 
