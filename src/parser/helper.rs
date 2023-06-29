@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -34,7 +33,7 @@ pub fn preceded_space_get_word(input: &str) -> IResult<&str, &str> {
     context("preceded_space_get_word", preceded(space1, get_word))(input)
 }
 
-// TODO add tests, add docs
+// TODO add docs
 #[inline]
 pub fn build_generic_delimited<'a, F: FnMut(&'a str) -> IResult<&'a str, T>, T>(
     fct: F,
@@ -53,7 +52,6 @@ pub fn build_generic_delimited<'a, F: FnMut(&'a str) -> IResult<&'a str, T>, T>(
     }
 }
 
-// TODO add tests
 /// Captures `(...VALUES,)` and parses the elements with `fct` of the list
 pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'a str>>>(
     input: &'a str,
@@ -69,7 +67,7 @@ pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'
     )(input)
 }
 
-// TODO add tests, remove Copy from F
+// TODO remove Copy from F
 #[inline]
 /// Returns a closure of type `Fn(&str) -> IResult<&str, Vec<&str>>` by moving the given `fct` into a closure which calls [`separated_tuple_list`].
 ///
@@ -114,6 +112,84 @@ mod tests {
             assert_eq!(
                 get_word(""),
                 Err(Err::Error(Error::new("", ErrorKind::TakeWhile1)))
+            );
+        }
+    }
+
+    mod build_generic_delimited {
+        use nom::bytes::complete::take_while1;
+        use nom::character::complete::{digit0, digit1};
+        use nom::combinator::map_res;
+        use nom::error::{Error, ErrorKind};
+        use nom::Err;
+
+        use crate::parser::helper::build_generic_delimited;
+
+        #[test]
+        fn just_works() {
+            assert_eq!(
+                build_generic_delimited(digit0, '(', ')')("(1)"),
+                Ok(("", "1"))
+            );
+            assert_eq!(
+                build_generic_delimited(map_res(digit1, str::parse), '(', ')')("(1)"),
+                Ok(("", 1))
+            );
+
+            assert_eq!(
+                build_generic_delimited(take_while1(|c| c != ')'), '(', ')')("(abc,1)"),
+                Ok(("", "abc,1"))
+            );
+        }
+
+        #[test]
+        fn errors() {
+            assert_eq!(
+                build_generic_delimited(digit0, '(', ')')(""),
+                Err(Err::Error(Error::new("", ErrorKind::Tag)))
+            );
+
+            assert_eq!(
+                build_generic_delimited(digit0, '(', ')')("(a)"),
+                Err(Err::Error(Error::new("a)", ErrorKind::Tag)))
+            );
+        }
+    }
+
+    mod build_separated_tuple_list {
+        use nom::character::complete::digit1;
+        use nom::error::{Error, ErrorKind};
+        use nom::Err;
+
+        use crate::parser::helper::{build_separated_tuple_list, get_word};
+
+        #[test]
+        fn just_works() {
+            assert_eq!(
+                build_separated_tuple_list(get_word)("(abc)"),
+                Ok(("", vec!["abc"]))
+            );
+            assert_eq!(
+                build_separated_tuple_list(get_word)("(abc, def)"),
+                Ok(("", vec!["abc", "def"]))
+            );
+
+            assert_eq!(
+                build_separated_tuple_list(digit1)("(1, 2)"),
+                Ok(("", vec!["1", "2"]))
+            );
+            // TODO make to work
+            // assert_eq!(
+            //     build_separated_tuple_list(map_res(digit1, str::parse))("(1, 2)"),
+            //     Ok(("", vec![1, 2]))
+            // );
+        }
+
+        #[test]
+        fn errors() {
+            assert_eq!(
+                build_separated_tuple_list(get_word)(""),
+                Err(Err::Error(Error::new("", ErrorKind::Tag)))
             );
         }
     }
