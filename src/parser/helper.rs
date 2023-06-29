@@ -1,3 +1,7 @@
+use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use nom::bytes::complete::{tag, take_while1};
 use nom::character::complete::{multispace0, space1};
 use nom::error::context;
@@ -30,7 +34,26 @@ pub fn preceded_space_get_word(input: &str) -> IResult<&str, &str> {
     context("preceded_space_get_word", preceded(space1, get_word))(input)
 }
 
-// TODO add tests
+// TODO add tests, add docs
+#[inline]
+pub fn build_generic_delimited<'a, F: FnMut(&'a str) -> IResult<&'a str, T>, T>(
+    fct: F,
+    opening_bracket: char,
+    closing_bracket: char,
+) -> impl Fn(&'a str) -> IResult<&'a str, T> {
+    // hack so that generic F don't have to have the bound 'Copy'
+    let fct = Rc::new(RefCell::new(fct));
+
+    move |input| {
+        delimited(
+            tag(opening_bracket.to_string().as_str()),
+            |input| fct.borrow_mut()(input),
+            tag(closing_bracket.to_string().as_str()),
+        )(input)
+    }
+}
+
+// TODO add tests, use type F from build_generic_closure
 /// Captures `(...VALUES,)` and parses the elements with `fct` of the list
 pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'a str>>>(
     input: &'a str,
@@ -38,15 +61,15 @@ pub fn separated_tuple_list<'a, F: Parser<&'a str, &'a str, nom::error::Error<&'
 ) -> IResult<&str, Vec<&str>> {
     context(
         "separated_tuple_list",
-        delimited(
-            tag("("),
+        build_generic_delimited(
             separated_list0(tuple((multispace0, tag(","), multispace0)), fct),
-            tag(")"),
+            '(',
+            ')',
         ),
     )(input)
 }
 
-// TODO add tests
+// TODO add tests, remove Copy from F
 #[inline]
 /// Returns a closure of type `Fn(&str) -> IResult<&str, Vec<&str>>` by moving the given `fct` into a closure which calls [`separated_tuple_list`].
 ///

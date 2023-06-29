@@ -1,12 +1,11 @@
 use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{digit1, multispace0, space1};
+use nom::character::complete::{digit1, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
-use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
+use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
-use super::helper::build_separated_tuple_list;
-use crate::parser::helper::get_word;
+use crate::parser::helper::{build_generic_delimited, build_separated_tuple_list, get_word};
 use crate::parser::types::{FieldExtra, TagHelper};
 
 #[derive(Debug)]
@@ -71,10 +70,10 @@ pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
 
     preceded(
         space1,
-        delimited(
-            tag(OPENING_BRACKET.to_string().as_str()),
+        build_generic_delimited(
             take_while1(|c| c != CLOSING_BRACKET),
-            tag(CLOSING_BRACKET.to_string().as_str()),
+            OPENING_BRACKET,
+            CLOSING_BRACKET,
         ),
     )(input)
 }
