@@ -54,7 +54,6 @@ fn parse_single_table_field(input: &str) -> IResult<&str, RawParsedField> {
     ))
 }
 
-// TODO add tests
 pub fn parse_table_fields(input: &str) -> IResult<&str, Vec<RawParsedField>> {
     terminated(
         separated_list0(tag(","), parse_single_table_field),
@@ -151,6 +150,45 @@ mod tests {
                     field_name: "number"
                 }
             );
+        }
+    }
+
+    mod parse_table_fields {
+        use crate::parser::parser::{parse_table_fields, RawParsedField};
+        use crate::parser::types::FieldExtra;
+
+        #[test]
+        fn just_works() {
+            let out = parse_table_fields(
+                "  int number,  varchar(512) text,  @foreign_key()  _ other_table,",
+            );
+            assert!(out.is_ok());
+            let out = out.unwrap();
+            assert_eq!(out.0, "");
+            assert_eq!(out.1.len(), 3);
+            assert_eq!(
+                out.1,
+                vec![
+                    RawParsedField {
+                        field_extra: None,
+                        field_type: "int",
+                        field_type_arguments: vec![],
+                        field_name: "number"
+                    },
+                    RawParsedField {
+                        field_extra: None,
+                        field_type: "varchar",
+                        field_type_arguments: vec!["512"],
+                        field_name: "text"
+                    },
+                    RawParsedField {
+                        field_extra: Some(FieldExtra::ForeignKey),
+                        field_type: "_",
+                        field_type_arguments: vec![],
+                        field_name: "other_table"
+                    }
+                ]
+            )
         }
     }
 }
