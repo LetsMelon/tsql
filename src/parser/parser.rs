@@ -8,7 +8,7 @@ use nom::IResult;
 use crate::parser::helper::{build_generic_delimited, build_separated_tuple_list, get_word};
 use crate::parser::types::{FieldExtra, TagHelper};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct RawParsedField<'a> {
     pub field_extra: Option<FieldExtra>,
     pub field_type: &'a str,
@@ -16,7 +16,6 @@ pub struct RawParsedField<'a> {
     pub field_name: &'a str,
 }
 
-// TODO add tests
 fn parse_single_table_field(input: &str) -> IResult<&str, RawParsedField> {
     let (input, out): (
         &str,
@@ -87,4 +86,71 @@ pub fn parse_table_extra(input: &str) -> IResult<&str, Option<(TagHelper, Vec<&s
             build_separated_tuple_list(get_word),
         ),
     ))(input)
+}
+
+#[cfg(test)]
+mod tests {
+    mod parse_single_table_field {
+        use crate::parser::parser::{parse_single_table_field, RawParsedField};
+        use crate::parser::types::FieldExtra;
+
+        #[test]
+        fn just_works() {
+            let out = parse_single_table_field("  int number");
+            assert!(out.is_ok());
+            let out = out.unwrap();
+            assert_eq!(out.0, "");
+            assert_eq!(
+                out.1,
+                RawParsedField {
+                    field_extra: None,
+                    field_type: "int",
+                    field_type_arguments: Vec::new(),
+                    field_name: "number"
+                }
+            );
+
+            let out = parse_single_table_field("  varchar(512) text");
+            assert!(out.is_ok());
+            let out = out.unwrap();
+            assert_eq!(out.0, "");
+            assert_eq!(
+                out.1,
+                RawParsedField {
+                    field_extra: None,
+                    field_type: "varchar",
+                    field_type_arguments: vec!["512"],
+                    field_name: "text"
+                }
+            );
+
+            let out = parse_single_table_field("  decimal(12, 3) number");
+            assert!(out.is_ok());
+            let out = out.unwrap();
+            assert_eq!(out.0, "");
+            assert_eq!(
+                out.1,
+                RawParsedField {
+                    field_extra: None,
+                    field_type: "decimal",
+                    field_type_arguments: vec!["12", "3"],
+                    field_name: "number"
+                }
+            );
+
+            let out = parse_single_table_field("  @foreign_key()  int number");
+            assert!(out.is_ok());
+            let out = out.unwrap();
+            assert_eq!(out.0, "");
+            assert_eq!(
+                out.1,
+                RawParsedField {
+                    field_extra: Some(FieldExtra::ForeignKey),
+                    field_type: "int",
+                    field_type_arguments: Vec::new(),
+                    field_name: "number"
+                }
+            );
+        }
+    }
 }

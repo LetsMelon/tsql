@@ -111,7 +111,7 @@ pub struct TableExtra {
     pub primary_key: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FieldExtra {
     ForeignKey,
 }
