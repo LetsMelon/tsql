@@ -1,5 +1,5 @@
 use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{digit1, space1};
+use nom::character::complete::{digit1, space0, space1};
 use nom::combinator::{opt, value};
 use nom::multi::separated_list0;
 use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
@@ -61,13 +61,12 @@ pub fn parse_table_fields(input: &str) -> IResult<&str, Vec<RawParsedField>> {
     )(input)
 }
 
-// TODO add tests
 pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
     const OPENING_BRACKET: char = '{';
     const CLOSING_BRACKET: char = '}';
 
     preceded(
-        space1,
+        space0,
         build_generic_delimited(
             take_while1(|c| c != CLOSING_BRACKET),
             OPENING_BRACKET,
@@ -189,6 +188,22 @@ mod tests {
                     }
                 ]
             )
+        }
+    }
+
+    mod parse_table_body {
+        use crate::parser::parser::parse_table_body;
+
+        #[test]
+        fn just_works() {
+            assert_eq!(parse_table_body("{abc()[]_%$§%}"), Ok(("", "abc()[]_%$§%")));
+
+            assert_eq!(
+                parse_table_body(" {abc()[]_%$§%}"),
+                Ok(("", "abc()[]_%$§%"))
+            );
+
+            assert_eq!(parse_table_body("{    }"), Ok(("", "    ")));
         }
     }
 }
