@@ -116,7 +116,7 @@ pub enum FieldExtra {
     ForeignKey,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TagHelper {
     PrimaryKey,
 }

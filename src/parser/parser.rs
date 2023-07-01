@@ -75,7 +75,6 @@ pub fn parse_table_body(input: &str) -> IResult<&str, &str> {
     )(input)
 }
 
-// TODO add tests
 pub fn parse_table_extra(input: &str) -> IResult<&str, Option<(TagHelper, Vec<&str>)>> {
     opt(preceded(
         tag("@"),
@@ -204,6 +203,42 @@ mod tests {
             );
 
             assert_eq!(parse_table_body("{    }"), Ok(("", "    ")));
+        }
+    }
+
+    mod parse_table_extra {
+        use crate::parser::parser::parse_table_extra;
+        use crate::parser::types::TagHelper;
+
+        #[test]
+        fn just_works() {
+            assert_eq!(
+                parse_table_extra("table People {};"),
+                Ok(("table People {};", None))
+            );
+
+            assert_eq!(
+                parse_table_extra("@primary_key()  table People {};"),
+                Ok(("  table People {};", Some((TagHelper::PrimaryKey, vec![]))))
+            );
+
+            assert_eq!(
+                parse_table_extra("@primary_key(id)  table People {  int id, };"),
+                Ok((
+                    "  table People {  int id, };",
+                    Some((TagHelper::PrimaryKey, vec!["id"]))
+                ))
+            );
+
+            assert_eq!(
+                parse_table_extra(
+                    "@primary_key(id, other_field)  table People {  int id, int other_field, };"
+                ),
+                Ok((
+                    "  table People {  int id, int other_field, };",
+                    Some((TagHelper::PrimaryKey, vec!["id", "other_field"]))
+                ))
+            );
         }
     }
 }
