@@ -19,7 +19,7 @@ pub fn parse_str(mut content: &str) -> Result<TableCollection> {
     let mut raw_tables = BTreeMap::new();
 
     while !content.is_empty() {
-        let out = parse(&content);
+        let out = parse(content);
 
         match out {
             Ok((c, table)) => {
