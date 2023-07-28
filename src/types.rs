@@ -15,8 +15,9 @@ pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
 fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)> {
     let key = collection.keys().next()?;
+    let item = collection.get(key)?;
 
-    Some((key, collection.get(key).unwrap()))
+    Some((key, item))
 }
 
 #[derive(Debug, Default)]
