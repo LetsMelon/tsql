@@ -1,16 +1,14 @@
 use std::collections::HashMap;
 
-use nom::bytes::complete::{tag, take_while1};
-use nom::character::complete::{digit1, multispace0, space1};
-use nom::combinator::{opt, value};
-use nom::multi::separated_list0;
-use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
+use nom::bytes::complete::tag;
 use nom::IResult;
 
 mod helper;
+mod parser;
 pub mod types;
 
-use crate::parser::helper::{get_word, preceded_space_get_word};
+use crate::parser::helper::preceded_space_get_word;
+use crate::parser::parser::{parse_table_body, parse_table_extra, parse_table_fields};
 use crate::parser::types::*;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
@@ -39,22 +37,7 @@ pub fn parse(input: &str) -> IResult<&str, RawTable> {
 }
 
 fn table_extra(input: &str) -> IResult<&str, TableExtra> {
-    #[derive(Debug, Clone, Copy)]
-    enum TagHelper {
-        PrimaryKey,
-    }
-
-    let (input, item) = opt(preceded(
-        tag("@"),
-        pair(
-            value(TagHelper::PrimaryKey, tag("primary_key")),
-            delimited(
-                tag("("),
-                separated_list0(tuple((multispace0, tag(","), multispace0)), get_word),
-                tag(")"),
-            ),
-        ),
-    ))(input)?;
+    let (input, item) = parse_table_extra(input)?;
 
     let mut table_extra = TableExtra::default();
 
@@ -72,54 +55,20 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
 }
 
 fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
-    // TODO remove types, but rust-analyzer can't figure out the type of `raw_list`
-    let (input, raw_list): (
-        &str,
-        Vec<(
-            (Option<FieldExtra>, Option<()>, &str, Option<Vec<&str>>),
-            &str,
-        )>,
-    ) = terminated(
-        separated_list0(
-            tag(","),
-            preceded(
-                space1,
-                separated_pair(
-                    tuple((
-                        opt(preceded(
-                            opt(space1),
-                            value(FieldExtra::ForeignKey, tag("@foreign_key()")),
-                        )),
-                        opt(value((), space1)),
-                        // type
-                        get_word,
-                        // arguments
-                        opt(delimited(
-                            tag("("),
-                            separated_list0(tuple((multispace0, tag(","), multispace0)), digit1),
-                            tag(")"),
-                        )),
-                    )),
-                    space1,
-                    // field name
-                    get_word,
-                ),
-            ),
-        ),
-        tag(","),
-    )(input)?;
+    let (input, raw_list) = parse_table_fields(input)?;
 
     let mut fields = HashMap::new();
 
-    for ((field_extra, _, field_type, field_type_arguments), field_name) in raw_list {
-        let parsed_type = RawDataType::parse(field_type, field_type_arguments).unwrap();
+    for raw_item in raw_list {
+        let parsed_type =
+            RawDataType::parse(raw_item.field_type, raw_item.field_type_arguments).unwrap();
 
-        if let Some(field_extra) = field_extra {
+        if let Some(field_extra) = raw_item.field_extra {
             fields.insert(
-                field_name.to_string(),
+                raw_item.field_name.to_string(),
                 FieldType::Virtual((
                     RawField {
-                        name: field_name.to_string(),
+                        name: raw_item.field_name.to_string(),
                         datatype: parsed_type,
                     },
                     field_extra,
@@ -127,9 +76,9 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
             );
         } else {
             fields.insert(
-                field_name.to_string(),
+                raw_item.field_name.to_string(),
                 FieldType::Real(RawField {
-                    name: field_name.to_string(),
+                    name: raw_item.field_name.to_string(),
                     datatype: parsed_type,
                 }),
             );
@@ -140,10 +89,7 @@ fn parse_fields(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
 }
 
 fn table_body(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
-    let (input, raw_body) = preceded(
-        space1,
-        delimited(tag("{"), take_while1(|c| c != '}'), tag("}")),
-    )(input)?;
+    let (input, raw_body) = parse_table_body(input)?;
 
     let (_, fields) = parse_fields(raw_body)?;
 
