@@ -68,9 +68,7 @@ pub enum RawDataType {
 }
 
 impl RawDataType {
-    pub fn parse(input: &str, argument: Option<Vec<&str>>) -> Option<Self> {
-        let argument = argument.unwrap_or_default();
-
+    pub fn parse(input: &str, argument: Vec<&str>) -> Option<Self> {
         match (input, argument.len()) {
             ("int", 0) => Some(RawDataType::Int),
             ("bool", 0) => Some(RawDataType::Bool),
@@ -113,7 +111,12 @@ pub struct TableExtra {
     pub primary_key: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FieldExtra {
     ForeignKey,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TagHelper {
+    PrimaryKey,
 }
