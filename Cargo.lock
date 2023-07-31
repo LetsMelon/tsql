@@ -48,6 +48,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "nom",
- "pico-args",
  "static_assertions",
+]
+
+[[package]]
+name = "tsql_cli"
+version = "0.1.0"
+dependencies = [
+ "pico-args",
+ "tsql",
 ]
