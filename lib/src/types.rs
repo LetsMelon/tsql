@@ -44,6 +44,7 @@ impl Table {
         let mut raw_tables_order: VecDeque<Rc<RefCell<RawTable>>> =
             VecDeque::with_capacity(raw_tables.len());
 
+        // TODO try to combine the two `while` loops
         while let Some((name, table)) = get_first_element(&raw_tables) {
             let name = name.clone();
             let table = table.clone();
@@ -53,11 +54,13 @@ impl Table {
             if has_fk {
                 let fk_tables = table.borrow().fk_tables();
 
+                // TODO why `.clone()`?
                 let ordered_tables = raw_tables_order
                     .iter()
                     .map(|item| item.borrow().name.clone())
                     .collect::<Vec<_>>();
 
+                // TODO merge the next `if` body with the following `for` loop
                 let mut all_fk_are_ordered = true;
                 for fk_table in fk_tables {
                     if !ordered_tables.contains(&fk_table) {
@@ -71,6 +74,7 @@ impl Table {
                     raw_tables.remove(&name);
                     raw_tables.insert(name, table);
 
+                    // TODO remove `continue`
                     continue;
                 }
             }
