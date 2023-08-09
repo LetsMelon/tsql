@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::path::PathBuf;
 use std::process::Command;
+use std::time::Duration;
 use std::{env, fs};
 
 use anyhow::Result;
@@ -68,5 +69,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     }
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().sample_size(250).measurement_time(Duration::from_secs(20));
+    targets = criterion_benchmark
+);
 criterion_main!(benches);
