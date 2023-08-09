@@ -45,7 +45,7 @@ if __name__ == "__main__":
         tables = int(args["tables"])
         fields = int(args["fields"])
 
-        for i in range(1, tables):
+        for i in range(tables):
             write_table(file, fields, i);
 
     print(f"Created file: '{file_name}'")
