@@ -1,0 +1,14 @@
+[package]
+name = "tsql"
+version = "0.1.0"
+edition = "2021"
+
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.72"
+nom = "7.1.3"
+static_assertions = "1.1.0"
