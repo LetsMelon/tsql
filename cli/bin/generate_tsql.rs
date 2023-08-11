@@ -8,8 +8,15 @@ use tsql::types::{DataType, Field, Table, TableExtra};
 use tsql::TransformTSQL;
 
 #[derive(Debug, Default)]
+enum Output {
+    File(String),
+    #[default]
+    Stdout,
+}
+
+#[derive(Debug, Default)]
 struct AppArgs {
-    file_name: String,
+    output: Output,
     tables: usize,
     fields_per_table: usize,
 }
@@ -23,7 +30,9 @@ USAGE:
 FLAGS:
   -h, --help            Prints help information
 
-  --name                Sets the name of the output file
+  --name                Saves the generated content into the given file
+  
+  --stdout              Print the output to the stdout
 
   --tables              How many tables should be generated
 
@@ -41,15 +50,18 @@ fn main() {
         }
     };
 
-    let mut file = BufWriter::new(File::create(&args.file_name).unwrap());
+    let mut buffer_to_write = match &args.output {
+        Output::File(path) => Box::new(File::create(path).unwrap()) as Box<dyn Write>,
+        Output::Stdout => Box::new(std::io::stdout()) as Box<dyn Write>,
+    };
 
     for i in 0..args.tables {
         let table = generate_table(i, args.fields_per_table);
 
-        table.transform_tsql(&mut file).unwrap();
+        table.transform_tsql(&mut buffer_to_write).unwrap();
     }
 
-    file.flush().unwrap();
+    buffer_to_write.flush().unwrap();
 }
 
 fn parse_args() -> Result<AppArgs, pico_args::Error> {
@@ -99,7 +111,8 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
         // TODO replace `args.[FIELD] = sth` with a builder pattern that can also check if we supplied
         // it with enough arguments, e.g.: file_name + tables + fields
         match argument.as_str() {
-            "name" => args.file_name = pargs.free_from_str()?,
+            "name" => args.output = Output::File(pargs.free_from_str()?),
+            "stdout" => args.output = Output::Stdout,
             "tables" => args.tables = pargs.free_from_str()?,
             "fields" => args.fields_per_table = pargs.free_from_str()?,
             // TODO implement custom error
