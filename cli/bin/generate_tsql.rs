@@ -112,7 +112,7 @@ fn main() {
     for i in 0..args.tables {
         let table = generate_table(i, args.fields_per_table);
 
-        table.transform_tsql(&mut buffer_to_write).unwrap();
+        table.transform_into_tsql(&mut buffer_to_write).unwrap();
     }
 
     buffer_to_write.flush().unwrap();

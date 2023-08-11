@@ -126,7 +126,7 @@ impl TableExtra {
 }
 
 impl TransformTSQL for TableExtra {
-    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         if !self.primary_key.is_empty() {
             writeln!(buffer, "@primary_key({})", self.primary_key.join(", "))?;
         }

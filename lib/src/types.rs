@@ -227,13 +227,13 @@ impl TransformSQL for Table {
 }
 
 impl TransformTSQL for Table {
-    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
-        self.extra.transform_tsql(buffer)?;
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        self.extra.transform_into_tsql(buffer)?;
 
         writeln!(buffer, "table {} {{", self.name)?;
 
         for field in self.fields.values() {
-            field.transform_tsql(buffer)?;
+            field.transform_into_tsql(buffer)?;
         }
 
         writeln!(buffer, "}};")?;
@@ -290,9 +290,9 @@ impl TransformSQL for Field {
 }
 
 impl TransformTSQL for Field {
-    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "\t")?;
-        self.datatype.transform_tsql(buffer)?;
+        self.datatype.transform_into_tsql(buffer)?;
         writeln!(buffer, " {},", self.name)?;
 
         Ok(())
@@ -382,7 +382,7 @@ impl TransformSQL for DataType {
 }
 
 impl TransformTSQL for DataType {
-    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{}", self.format())?;
 
         Ok(())

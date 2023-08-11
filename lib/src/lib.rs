@@ -48,5 +48,5 @@ pub trait TransformSQL {
 
 // TODO add docs
 pub trait TransformTSQL {
-    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()>;
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()>;
 }
