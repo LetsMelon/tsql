@@ -9,11 +9,11 @@ use static_assertions::const_assert_eq;
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
 use crate::{TransformSQL, TransformTSQL};
 
-// TODO move `TableExtra` from `crate::parser::types` to here
-pub type TableExtra = crate::parser::types::TableExtra;
-
+/// A `BTreeMap` where the key is always of type `String` and the value type is generic `T`
 pub type GenericCollection<T> = BTreeMap<String, T>;
+/// A `BTreeMap` with the type of a key is a `String` and the type of the value is a [`Table`]
 pub type TableCollection = GenericCollection<Table>;
+/// A `BTreeMap` with the type of a key is a `String` and the type of the value is a [`Rc<RefCell<RawTable>>`]
 pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
 fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)> {
@@ -384,6 +384,39 @@ impl TransformSQL for DataType {
 impl TransformTSQL for DataType {
     fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{}", self.format())?;
+
+        Ok(())
+    }
+}
+
+/// Holds metadata for a [`Table`]
+#[derive(Debug, Default)]
+pub struct TableExtra {
+    primary_key: Vec<String>,
+}
+
+impl TableExtra {
+    pub fn new_with_pk(primary_key: Vec<String>) -> Self {
+        TableExtra {
+            primary_key,
+            ..Self::default()
+        }
+    }
+
+    pub fn primary_key(&self) -> &Vec<String> {
+        &self.primary_key
+    }
+
+    pub fn primary_key_mut(&mut self) -> &mut Vec<String> {
+        &mut self.primary_key
+    }
+}
+
+impl TransformTSQL for TableExtra {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        if !self.primary_key.is_empty() {
+            writeln!(buffer, "@primary_key({})", self.primary_key.join(", "))?;
+        }
 
         Ok(())
     }

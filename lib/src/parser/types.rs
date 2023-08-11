@@ -1,9 +1,6 @@
 use std::collections::HashMap;
-use std::io::Write;
 
-use anyhow::Result;
-
-use crate::TransformTSQL;
+use crate::types::TableExtra;
 
 #[derive(Debug)]
 pub struct RawTable {
@@ -108,30 +105,6 @@ impl RawDataType {
 
             _ => None,
         }
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct TableExtra {
-    pub(crate) primary_key: Vec<String>,
-}
-
-impl TableExtra {
-    pub fn new_with_pk(primary_key: Vec<String>) -> Self {
-        TableExtra {
-            primary_key,
-            ..Self::default()
-        }
-    }
-}
-
-impl TransformTSQL for TableExtra {
-    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
-        if !self.primary_key.is_empty() {
-            writeln!(buffer, "@primary_key({})", self.primary_key.join(", "))?;
-        }
-
-        Ok(())
     }
 }
 

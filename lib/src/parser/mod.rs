@@ -9,7 +9,8 @@ pub mod types;
 
 use crate::parser::helper::preceded_space_get_word;
 use crate::parser::parser::{parse_table_body, parse_table_extra, parse_table_fields};
-use crate::parser::types::*;
+use crate::parser::types::{FieldType, RawDataType, RawField, RawTable, TagHelper};
+use crate::types::TableExtra;
 
 pub fn parse(input: &str) -> IResult<&str, RawTable> {
     let (input, extra) = table_extra(input)?;
@@ -42,7 +43,7 @@ fn table_extra(input: &str) -> IResult<&str, TableExtra> {
     let mut table_extra = TableExtra::default();
 
     match item {
-        Some((TagHelper::PrimaryKey, values)) => table_extra.primary_key.append(
+        Some((TagHelper::PrimaryKey, values)) => table_extra.primary_key_mut().append(
             &mut values
                 .iter()
                 .map(|item| item.to_string())
