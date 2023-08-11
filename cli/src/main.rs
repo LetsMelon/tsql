@@ -50,7 +50,7 @@ fn main() {
     writeln_sql_comment(&mut file, COMMENT_LINE).unwrap();
 
     for (_, table) in tables {
-        table.transform(&mut file).unwrap();
+        table.transform_into_sql(&mut file).unwrap();
     }
     file.flush().unwrap();
 }

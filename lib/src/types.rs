@@ -175,13 +175,13 @@ impl Table {
 }
 
 impl TransformSQL for Table {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         writeln!(buffer, "CREATE TABLE {} (", self.name)?;
 
         let mut foreign_keys_table_fields: HashMap<String, Vec<&Field>> = HashMap::new();
 
         for field in self.fields.values() {
-            field.transform(buffer)?;
+            field.transform_into_sql(buffer)?;
 
             if field.foreign_key_reference.is_some() {
                 let table = &field.foreign_key_reference.as_ref().unwrap().0;
@@ -281,9 +281,9 @@ impl Field {
 }
 
 impl TransformSQL for Field {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{} ", self.name)?;
-        self.datatype.transform(buffer)?;
+        self.datatype.transform_into_sql(buffer)?;
 
         Ok(())
     }
@@ -372,7 +372,7 @@ impl DataType {
 }
 
 impl TransformSQL for DataType {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         let formatted = self.format();
 
         writeln!(buffer, "{},", formatted)?;

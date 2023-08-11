@@ -42,8 +42,9 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
     parse_str(&content)
 }
 
+// TODO add docs
 pub trait TransformSQL {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()>;
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()>;
 }
 
 // TODO add docs
