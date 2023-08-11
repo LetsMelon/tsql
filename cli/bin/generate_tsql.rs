@@ -1,24 +1,78 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::Write;
 use std::process::exit;
 
 use hmac_sha256::HMAC;
 use tsql::types::{DataType, Field, Table, TableExtra};
 use tsql::TransformTSQL;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 enum Output {
-    File(String),
-    #[default]
     Stdout,
+    File(String),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct AppArgs {
     output: Output,
     tables: usize,
     fields_per_table: usize,
+}
+
+#[derive(Debug)]
+struct AppArgsBuilder {
+    finish: usize,
+
+    data_output: Output,
+    data_tables: usize,
+    data_fields_per_table: usize,
+}
+
+impl AppArgsBuilder {
+    const DATA_OUTPUT: usize = 0x01 << 0;
+    const DATA_TABLES: usize = 0x01 << 1;
+    const DATA_FIELDS_PER_TABLE: usize = 0x01 << 2;
+
+    fn new() -> Self {
+        AppArgsBuilder {
+            finish: 0,
+            data_output: Output::Stdout,
+            data_tables: Default::default(),
+            data_fields_per_table: Default::default(),
+        }
+    }
+
+    fn build(self) -> Option<AppArgs> {
+        if !self.is_finish() {
+            return None;
+        }
+
+        Some(AppArgs {
+            output: self.data_output,
+            tables: self.data_tables,
+            fields_per_table: self.data_fields_per_table,
+        })
+    }
+
+    fn is_finish(&self) -> bool {
+        self.finish == (Self::DATA_OUTPUT | Self::DATA_TABLES | Self::DATA_FIELDS_PER_TABLE)
+    }
+
+    fn set_output(&mut self, output: Output) {
+        self.data_output = output;
+        self.finish |= Self::DATA_OUTPUT;
+    }
+
+    fn set_tables(&mut self, tables: usize) {
+        self.data_tables = tables;
+        self.finish |= Self::DATA_TABLES;
+    }
+
+    fn set_fields_per_table(&mut self, fields_per_table: usize) {
+        self.data_fields_per_table = fields_per_table;
+        self.finish |= Self::DATA_FIELDS_PER_TABLE;
+    }
 }
 
 const HELP: &str = "\
@@ -73,8 +127,7 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
         exit(0);
     }
 
-    // TODO change to builder pattern
-    let mut args = AppArgs::default();
+    let mut args = AppArgsBuilder::new();
 
     loop {
         let argument = pargs.free_from_str();
@@ -111,10 +164,10 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
         // TODO replace `args.[FIELD] = sth` with a builder pattern that can also check if we supplied
         // it with enough arguments, e.g.: file_name + tables + fields
         match argument.as_str() {
-            "name" => args.output = Output::File(pargs.free_from_str()?),
-            "stdout" => args.output = Output::Stdout,
-            "tables" => args.tables = pargs.free_from_str()?,
-            "fields" => args.fields_per_table = pargs.free_from_str()?,
+            "name" => args.set_output(Output::File(pargs.free_from_str()?)),
+            "stdout" => args.set_output(Output::Stdout),
+            "tables" => args.set_tables(pargs.free_from_str()?),
+            "fields" => args.set_fields_per_table(pargs.free_from_str()?),
             // TODO implement custom error
             _ => panic!("Unknown argument: {}", argument),
         }
@@ -123,7 +176,8 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
     // TODO implement custom error, but `pargs.finish()` _should_ always return a empty vec... in theory
     assert!(pargs.finish().is_empty());
 
-    Ok(args)
+    // TODO implement custom error
+    Ok(args.build().unwrap())
 }
 
 fn number_to_string(number: usize) -> String {
