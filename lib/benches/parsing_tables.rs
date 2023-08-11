@@ -24,25 +24,36 @@ impl Display for Arguments {
 
 fn generate_test_file(tables: usize, fields: usize) -> Result<(Arguments, PathBuf)> {
     let current_dir = env::current_dir()?;
-    let working_dir = current_dir.as_path().join("tests").join("files");
+    // TODO remove this "hacky" way to get the target directory.
+    // Because I think this will fail with the user sets a custom directory for the `target` dir.
+    // Maybe some env variable has the absolute path to the dir. Or figure it out with a build script.
+    let target_dir = current_dir
+        .as_path()
+        .parent()
+        .unwrap()
+        .join("target")
+        .join("debug");
 
     let file_name = format!("{}_{}.tsql", tables, fields);
 
-    // TODO test for if the `python` in the path is compatible with `generate_big.py`
-    // TODO rewrite `generate_big.py` as a rust binary under `/cli`
-    let output = Command::new("python3")
-        .current_dir(working_dir.clone())
-        .arg("generate_big.py")
+    // TODO don't call the executable, call the functions directly
+    // TODO don't write to the file system, maybe it's possible that the child process writes to stdout and we capture stdout into a buffer.
+    // But with this approach I think we should restructure the benches a little bit.
+    // Now: generates files on fs -> loop: read file for bench + bench with the file -> jump back to loop
+    // Future:  loop: generate dummy content + bench with content -> jump back to loop
+    let output = Command::new(&target_dir.join("generate_tsql"))
+        .current_dir(&target_dir)
         .args(["--name", &file_name])
         .args(["--tables", &tables.to_string()])
         .args(["--fields", &fields.to_string()])
         .status()?;
 
+    // TODO throw custom error
     assert!(output.success());
 
     Ok((
         Arguments { tables, fields },
-        working_dir.join(file_name).to_path_buf(),
+        target_dir.join(file_name).to_path_buf(),
     ))
 }
 

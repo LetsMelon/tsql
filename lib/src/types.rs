@@ -6,8 +6,11 @@ use std::rc::Rc;
 use anyhow::{bail, Result};
 use static_assertions::const_assert_eq;
 
-use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable, TableExtra};
-use crate::TransformSQL;
+use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
+use crate::{TransformSQL, TransformTSQL};
+
+// TODO move `TableExtra` from `crate::parser::types` to here
+pub type TableExtra = crate::parser::types::TableExtra;
 
 pub type GenericCollection<T> = BTreeMap<String, T>;
 pub type TableCollection = GenericCollection<Table>;
@@ -20,6 +23,7 @@ fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)>
     Some((key, item))
 }
 
+// TODO remove `pub(crate)`
 #[derive(Debug, Default)]
 pub struct Table {
     pub(crate) extra: TableExtra,
@@ -30,6 +34,18 @@ pub struct Table {
 }
 
 impl Table {
+    pub fn new<S: Into<String>>(
+        name: S,
+        fields: HashMap<String, Field>,
+        extra: TableExtra,
+    ) -> Self {
+        Table {
+            extra,
+            name: name.into(),
+            fields,
+        }
+    }
+
     pub fn get_field(&self, key: &str) -> Option<&Field> {
         self.fields.get(key)
     }
@@ -210,6 +226,22 @@ impl TransformSQL for Table {
     }
 }
 
+impl TransformTSQL for Table {
+    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        self.extra.transform_tsql(buffer)?;
+
+        writeln!(buffer, "table {} {{", self.name)?;
+
+        for field in self.fields.values() {
+            field.transform_tsql(buffer)?;
+        }
+
+        writeln!(buffer, "}};")?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) name: String,
@@ -219,6 +251,22 @@ pub struct Field {
 }
 
 impl Field {
+    pub fn new<S: Into<String>>(name: S, datatype: DataType) -> Field {
+        Self::new_with_fk(name, datatype, None)
+    }
+
+    pub fn new_with_fk<S: Into<String>>(
+        name: S,
+        datatype: DataType,
+        foreign_key_reference: Option<(String, Rc<Field>)>,
+    ) -> Field {
+        Field {
+            name: name.into(),
+            datatype,
+            foreign_key_reference,
+        }
+    }
+
     fn parse(raw: &RawField) -> Result<Self> {
         Ok(Field {
             name: raw.name.to_string(),
@@ -236,6 +284,16 @@ impl TransformSQL for Field {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{} ", self.name)?;
         self.datatype.transform(buffer)?;
+
+        Ok(())
+    }
+}
+
+impl TransformTSQL for Field {
+    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        write!(buffer, "\t")?;
+        self.datatype.transform_tsql(buffer)?;
+        writeln!(buffer, " {},", self.name)?;
 
         Ok(())
     }
@@ -290,11 +348,10 @@ impl DataType {
             }
         }
     }
-}
 
-impl TransformSQL for DataType {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
-        let formatted = match self {
+    // TODO maybe replace with `&'a str` if possible?
+    fn format(&self) -> String {
+        match self {
             DataType::Int => "int".to_string(),
             DataType::Bool => "boolean".to_string(),
             DataType::BigInt => "bigint".to_string(),
@@ -310,9 +367,23 @@ impl TransformSQL for DataType {
             DataType::Text(args) => format!("text({})", args),
 
             DataType::Decimal(precision, scale) => format!("decimal({}, {})", precision, scale),
-        };
+        }
+    }
+}
+
+impl TransformSQL for DataType {
+    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        let formatted = self.format();
 
         writeln!(buffer, "{},", formatted)?;
+
+        Ok(())
+    }
+}
+
+impl TransformTSQL for DataType {
+    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        write!(buffer, "{}", self.format())?;
 
         Ok(())
     }

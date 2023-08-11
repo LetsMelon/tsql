@@ -45,3 +45,8 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<TableCollection> {
 pub trait TransformSQL {
     fn transform<W: Write>(&self, buffer: &mut W) -> Result<()>;
 }
+
+// TODO add docs
+pub trait TransformTSQL {
+    fn transform_tsql<W: Write>(&self, buffer: &mut W) -> Result<()>;
+}
