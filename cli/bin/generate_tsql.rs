@@ -7,7 +7,7 @@ use hmac_sha256::HMAC;
 use tsql::types::{DataType, Field, Table, TableExtra};
 use tsql::TransformTSQL;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct AppArgs {
     file_name: String,
     tables: usize,
@@ -55,31 +55,60 @@ fn main() {
 fn parse_args() -> Result<AppArgs, pico_args::Error> {
     let mut pargs = pico_args::Arguments::from_env();
 
+    // TODO add this logic into the `loop { ... }`
     if pargs.contains(["-h", "--help"]) {
         print!("{}", HELP);
         exit(0);
     }
 
-    // TODO refactor/remove this "hack"
-    let args = AppArgs {
-        file_name: {
-            let _: String = pargs.free_from_str()?;
-            pargs.free_from_str()?
-        },
-        tables: {
-            let _: String = pargs.free_from_str()?;
-            pargs.free_from_str()?
-        },
-        fields_per_table: {
-            let _: String = pargs.free_from_str()?;
-            pargs.free_from_str()?
-        },
-    };
+    // TODO change to builder pattern
+    let mut args = AppArgs::default();
 
-    let remaining = pargs.finish();
-    if !remaining.is_empty() {
-        eprintln!("Warning: unused arguments left: {:?}.", remaining);
+    loop {
+        let argument = pargs.free_from_str();
+
+        if let Err(err) = argument {
+            match err {
+                // The error `pico_args::Error::MissingArgument` should be thrown when we
+                // don't have any arguments left to parse.
+                // So it's save to ignore the error and break out of the loop.
+                pico_args::Error::MissingArgument => break,
+                // Some error occurred while parsing, so we just pass the error up.
+                _ => return Err(err),
+            };
+        }
+
+        // An argument like '--name' or '--fields' always has the prefix '--'.
+        // So we check if the argument starts with '--'.
+        // If not we _currently_ panic. In the future this if clause should return a custom error.
+        if argument
+            .as_ref()
+            .map(|item: &String| !item.starts_with("--"))
+            .unwrap_or(false)
+        {
+            // TODO return custom error
+            panic!("Arguments have to start with '--' but got {:?}", argument);
+        }
+
+        // At this time in the program we know that argument is `Ok(_)` so we can unwrap save
+        // and we can replace the prefix with nothing.
+        // Makes it cleaner in the next match statement.
+        let argument: String = argument.unwrap().replace("--", "");
+
+        // The arguments `generate_tsql` accepts and sets the corresponding value into the struct AppArgs.
+        // TODO replace `args.[FIELD] = sth` with a builder pattern that can also check if we supplied
+        // it with enough arguments, e.g.: file_name + tables + fields
+        match argument.as_str() {
+            "name" => args.file_name = pargs.free_from_str()?,
+            "tables" => args.tables = pargs.free_from_str()?,
+            "fields" => args.fields_per_table = pargs.free_from_str()?,
+            // TODO implement custom error
+            _ => panic!("Unknown argument: {}", argument),
+        }
     }
+
+    // TODO implement custom error, but `pargs.finish()` _should_ always return a empty vec... in theory
+    assert!(pargs.finish().is_empty());
 
     Ok(args)
 }
