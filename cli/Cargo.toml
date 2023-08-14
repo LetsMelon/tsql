@@ -13,6 +13,5 @@ name = "generate_tsql"
 path = "./bin/generate_tsql.rs"
 
 [dependencies]
-tsql = { version = "0.1.0", path = "../lib" }
+tsql = { version = "0.1.0", path = "../lib", features = ["generate"] }
 pico-args = "0.5.0"
-hmac-sha256 = "1.1.7"

@@ -544,6 +544,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "criterion",
+ "hmac-sha256",
  "nom",
  "static_assertions",
 ]
@@ -552,7 +553,6 @@ dependencies = [
 name = "tsql_cli"
 version = "0.1.0"
 dependencies = [
- "hmac-sha256",
  "pico-args",
  "tsql",
 ]

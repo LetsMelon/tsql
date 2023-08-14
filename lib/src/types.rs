@@ -6,6 +6,9 @@ use std::rc::Rc;
 use anyhow::{bail, Result};
 use static_assertions::const_assert_eq;
 
+use crate::generate::hash_number_and_stringify;
+#[cfg(feature = "generate")]
+use crate::generate::GenerateDummy;
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
 use crate::{TransformSQL, TransformTSQL};
 
@@ -299,6 +302,15 @@ impl TransformTSQL for Field {
     }
 }
 
+impl GenerateDummy for Field {
+    fn generate_dummy(number: usize) -> Self {
+        let name = hash_number_and_stringify(number);
+        let datatype = DataType::generate_dummy(number);
+
+        Field::new(name, datatype)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DataType {
     Int,
@@ -386,6 +398,22 @@ impl TransformTSQL for DataType {
         write!(buffer, "{}", self.format())?;
 
         Ok(())
+    }
+}
+
+#[cfg(feature = "generate")]
+impl GenerateDummy for DataType {
+    fn generate_dummy(number: usize) -> Self {
+        // TODO add more variants
+        const DATATYPES: &[DataType] = &[
+            DataType::Int,
+            DataType::Double,
+            DataType::VarChar(100),
+            DataType::Char(6),
+            DataType::Uuid,
+        ];
+
+        DATATYPES[number % DATATYPES.len()]
     }
 }
 

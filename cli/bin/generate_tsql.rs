@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::process::exit;
 
-use hmac_sha256::HMAC;
-use tsql::types::{DataType, Field, Table, TableExtra};
+use tsql::generate::generate_table;
 use tsql::TransformTSQL;
 
 #[derive(Debug)]
@@ -176,48 +174,4 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
 
     // TODO implement custom error
     Ok(args.build().unwrap())
-}
-
-fn number_to_string(number: usize) -> String {
-    let bytes = number.to_le_bytes();
-    let h = HMAC::new(bytes);
-    let hash = h.finalize();
-
-    hash.to_vec()
-        .iter()
-        // TODO check if this maps all u8 values into ascii lowercase values
-        .map(|item| (item % 24 + 65) as char)
-        .collect::<String>()
-}
-
-fn generate_table(counter: usize, fields_per_table: usize) -> Table {
-    const DATATYPES: &[DataType] = &[
-        DataType::Int,
-        DataType::Double,
-        DataType::VarChar(100),
-        DataType::Char(6),
-        DataType::Uuid,
-    ];
-
-    let name = number_to_string(counter);
-
-    let mut fields = HashMap::new();
-
-    for i in 0..fields_per_table {
-        let field_name = number_to_string(i.wrapping_add(counter.wrapping_mul(100)));
-        let datatype = DATATYPES[i.wrapping_add(counter) % DATATYPES.len()];
-
-        let field = Field::new(&field_name, datatype);
-
-        fields.insert(field_name, field);
-    }
-
-    // TODO check if `fields_per_table > 0`
-    let first_field_for_pk = fields.keys().next().unwrap().clone();
-
-    Table::new(
-        name,
-        fields,
-        TableExtra::new_with_pk(vec![first_field_for_pk]),
-    )
 }
