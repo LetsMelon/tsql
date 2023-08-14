@@ -161,8 +161,6 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
         let argument: String = argument.unwrap().replace("--", "");
 
         // The arguments `generate_tsql` accepts and sets the corresponding value into the struct AppArgs.
-        // TODO replace `args.[FIELD] = sth` with a builder pattern that can also check if we supplied
-        // it with enough arguments, e.g.: file_name + tables + fields
         match argument.as_str() {
             "name" => args.set_output(Output::File(pargs.free_from_str()?)),
             "stdout" => args.set_output(Output::Stdout),
