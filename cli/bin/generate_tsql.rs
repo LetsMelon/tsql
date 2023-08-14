@@ -204,8 +204,8 @@ fn generate_table(counter: usize, fields_per_table: usize) -> Table {
     let mut fields = HashMap::new();
 
     for i in 0..fields_per_table {
-        let field_name = number_to_string(i + 100 + counter);
-        let datatype = DATATYPES[i % DATATYPES.len()];
+        let field_name = number_to_string(i.wrapping_add(counter.wrapping_mul(100)));
+        let datatype = DATATYPES[i.wrapping_add(counter) % DATATYPES.len()];
 
         let field = Field::new(&field_name, datatype);
 
