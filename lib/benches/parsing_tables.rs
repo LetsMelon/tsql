@@ -1,11 +1,12 @@
-use std::env;
 use std::fmt::Display;
-use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use anyhow::Result;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use tsql::parse_str;
+#[cfg(feature = "generate")]
+use tsql::generate::generate_table;
+use tsql::types::Table;
+use tsql::{parse_str, TransformTSQL};
 
 struct Arguments {
     tables: usize,
@@ -24,28 +25,23 @@ impl Display for Arguments {
     }
 }
 
-fn generate_test_file(arguments: &Arguments) -> Result<String> {
-    let current_dir = env::current_dir()?;
-    // TODO remove this "hacky" way to get the target directory.
-    // Because I think this will fail with the user sets a custom directory for the `target` dir.
-    // Maybe some env variable has the absolute path to the dir. Or figure it out with a build script.
-    let target_dir = current_dir
-        .as_path()
-        .parent()
-        .unwrap()
-        .join("target")
-        .join("debug");
+fn generate_test_content(arguments: &Arguments) -> Result<String> {
+    let mut buffer = Vec::new();
 
-    // TODO don't call the executable, call the functions directly
-    let output = Command::new(&target_dir.join("generate_tsql"))
-        .current_dir(&target_dir)
-        .arg("--stdout")
-        .args(["--tables", &arguments.tables.to_string()])
-        .args(["--fields", &arguments.fields.to_string()])
-        .stdout(Stdio::piped())
-        .output()?;
+    for i in 0..arguments.tables {
+        #[cfg(feature = "generate")]
+        let table: Table = generate_table(i, arguments.fields);
+        #[cfg(not(feature = "generate"))]
+        let table: Table = {
+            // TODO make this nicer and maybe into a compile time warning and not a runtime
+            panic!("The feature `generate` has to be enabled to run this benches.");
+            todo!()
+        };
 
-    Ok(String::from_utf8(output.stdout)?)
+        table.transform_into_tsql(&mut buffer)?;
+    }
+
+    Ok(String::from_utf8(buffer)?)
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -59,7 +55,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     ];
 
     for argument in arguments {
-        let content = generate_test_file(&argument).unwrap();
+        let content = generate_test_content(&argument).unwrap();
 
         c.bench_function(&format!("{}", argument), |b| {
             b.iter(|| black_box(parse_str(&content)))

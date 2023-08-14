@@ -13,8 +13,6 @@ use crate::parser::parse;
 
 #[cfg(feature = "generate")]
 pub mod generate;
-#[cfg(not(feature = "generate"))]
-mod generate;
 
 mod parser;
 pub mod types;

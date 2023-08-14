@@ -6,9 +6,8 @@ use std::rc::Rc;
 use anyhow::{bail, Result};
 use static_assertions::const_assert_eq;
 
-use crate::generate::hash_number_and_stringify;
 #[cfg(feature = "generate")]
-use crate::generate::GenerateDummy;
+use crate::generate::{hash_number_and_stringify, GenerateDummy};
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
 use crate::{TransformSQL, TransformTSQL};
 
@@ -302,6 +301,7 @@ impl TransformTSQL for Field {
     }
 }
 
+#[cfg(feature = "generate")]
 impl GenerateDummy for Field {
     fn generate_dummy(number: usize) -> Self {
         let name = hash_number_and_stringify(number);
