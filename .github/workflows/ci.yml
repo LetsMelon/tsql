@@ -27,11 +27,11 @@ jobs:
         with:
           toolchain: nightly
           override: true
+          components: llvm-tools-preview
 
-      - name: Install cargo-binstall
-        run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-
-      - uses: cargo-bins/cargo-binstall@main
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-binstall,cargo-llvm-cov
 
       - uses: actions/cache@v3
         with:
@@ -56,8 +56,13 @@ jobs:
       - name: Test
         run: cargo nextest run --all-features --all
 
-      - name: Coverage
-        working-directory: ./lib
+      - name: cargo llvm-cov
         run: |
-          mv ./tests ./ttests
-          cargo tarpaulin --release --all-features --all --coveralls ${{ secrets.COVERALLS_TOKEN }}
+          rm -r ./lib/tests  
+          cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
