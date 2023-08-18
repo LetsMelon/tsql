@@ -31,9 +31,7 @@ jobs:
       - name: Install cargo-binstall
         run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
-      - name: Install rust binaries
-        run: |
-          cargo binstall --no-confirm cargo-tarpaulin cargo-nextest
+      - uses: cargo-bins/cargo-binstall@main
 
       - uses: actions/cache@v3
         with:
