@@ -1,6 +1,7 @@
 [workspace]
 default-members = ["cli"]
 members = ["lib", "cli"]
+resolver = "2"
 
 [workspace.package]
 license = "Apache-2.0"
