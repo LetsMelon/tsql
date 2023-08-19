@@ -63,7 +63,7 @@ jobs:
       - name: cargo llvm-cov
         run: |
           rm -r ./lib/tests  
-          cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+          cargo llvm-cov --locked --all --all-features --lcov --output-path lcov.info
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
