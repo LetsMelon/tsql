@@ -16,6 +16,7 @@ hmac-sha256 = { version = "1.1.7", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
+itertools = "0.11.0"
 
 [features]
 default = []
