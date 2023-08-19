@@ -96,3 +96,36 @@ fn table_body(input: &str) -> IResult<&str, HashMap<String, FieldType>> {
 
     Ok((input, fields))
 }
+
+#[cfg(test)]
+mod tests {
+
+    mod table_extra {
+        use super::super::table_extra;
+        use crate::types::TableExtra;
+
+        #[test]
+        fn just_works() {
+            assert_eq!(
+                table_extra("@primary_key(id) something else for another parser"),
+                Ok((
+                    " something else for another parser",
+                    TableExtra::new_with_pk(vec!["id"])
+                ))
+            );
+
+            assert_eq!(
+                table_extra("@primary_key(id, another) something else for another parser"),
+                Ok((
+                    " something else for another parser",
+                    TableExtra::new_with_pk(vec!["id", "another"])
+                ))
+            );
+
+            assert_eq!(
+                table_extra("something else for another parser"),
+                Ok(("something else for another parser", TableExtra::default()))
+            );
+        }
+    }
+}

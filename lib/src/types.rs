@@ -418,15 +418,19 @@ impl GenerateDummy for DataType {
 }
 
 /// Holds metadata for a [`Table`]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct TableExtra {
     primary_key: Vec<String>,
 }
 
 impl TableExtra {
-    pub fn new_with_pk(primary_key: Vec<String>) -> Self {
+    pub fn new_with_pk<S: Into<String> + Clone>(primary_key: Vec<S>) -> Self {
         TableExtra {
-            primary_key,
+            primary_key: primary_key
+                .iter()
+                // TODO remove call to `.clone()`
+                .map(|item| item.clone().into())
+                .collect::<Vec<_>>(),
             ..Self::default()
         }
     }
