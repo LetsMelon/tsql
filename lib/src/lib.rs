@@ -14,6 +14,7 @@ use crate::parser::parse;
 #[cfg(feature = "generate")]
 pub mod generate;
 
+mod helper;
 mod parser;
 pub mod types;
 

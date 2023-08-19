@@ -8,6 +8,7 @@ use static_assertions::const_assert_eq;
 
 #[cfg(feature = "generate")]
 use crate::generate::{hash_number_and_stringify, GenerateDummy};
+use crate::helper::get_first_element;
 use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
 use crate::{TransformSQL, TransformTSQL};
 
@@ -17,13 +18,6 @@ pub type GenericCollection<T> = BTreeMap<String, T>;
 pub type TableCollection = GenericCollection<Table>;
 /// A `BTreeMap` with the type of a key is a `String` and the type of the value is a [`Rc<RefCell<RawTable>>`]
 pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
-
-fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)> {
-    let key = collection.keys().next()?;
-    let item = collection.get(key)?;
-
-    Some((key, item))
-}
 
 // TODO remove `pub(crate)`
 #[derive(Debug, Default)]
