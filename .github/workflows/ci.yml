@@ -53,8 +53,9 @@ jobs:
       - name: Create test files
         continue-on-error: true
         run: |
-          ./target/debug/generate_tsql --name ./lib/tests/filesbig_smaller.tsql --tables 1000 --fields 500
-          ./target/debug/generate_tsql --name ./lib/tests/filesbig_170mb.tsql --tables 4000 --fields 1000
+          cargo build --release --bin generate_tsql
+          ./target/release/generate_tsql --name ./lib/tests/filesbig_smaller.tsql --tables 1000 --fields 500
+          ./target/release/generate_tsql --name ./lib/tests/filesbig_170mb.tsql --tables 4000 --fields 1000
 
       - name: Test
         run: cargo nextest run --all-features --all
