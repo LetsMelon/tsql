@@ -19,8 +19,6 @@ impl RawTable {
     pub fn fk_tables(&self) -> Vec<String> {
         let mut table_names = Vec::with_capacity(self.fields.len());
 
-        dbg!(&self);
-
         for field_type in self.fields.values() {
             match field_type {
                 FieldType::Real(_) => (),

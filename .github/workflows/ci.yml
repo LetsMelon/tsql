@@ -50,13 +50,6 @@ jobs:
       - name: Build
         run: cargo build --verbose --all-targets --all --all-features
 
-      - name: Create test files
-        continue-on-error: true
-        run: |
-          cargo build --release --bin generate_tsql
-          ./target/release/generate_tsql --name ./lib/tests/filesbig_smaller.tsql --tables 1000 --fields 500
-          ./target/release/generate_tsql --name ./lib/tests/filesbig_170mb.tsql --tables 4000 --fields 1000
-
       - name: Test
         run: cargo nextest run --all-features --all
 

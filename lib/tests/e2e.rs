@@ -11,19 +11,24 @@ fn e2e_parse_all_files() {
     let paths = path
         .read_dir()
         .unwrap()
-        .filter(|item| item.is_ok())
-        .map(|item| item.unwrap())
-        .filter(|item| match item.path().extension() {
-            Some(ending) if ending == OsStr::new("tsql") => true,
-            _ => false,
+        .filter_map(|item| {
+            if item.is_err() {
+                return None;
+            }
+
+            let item = item.unwrap();
+
+            if let Some(ending) = item.path().extension() {
+                if ending == OsStr::new("tsql") {
+                    return Some(item.path());
+                }
+            }
+
+            return None;
         })
-        .map(|item| item.path())
         .collect::<Vec<_>>();
 
-    println!("{paths:?}");
-
     for path in paths {
-        println!("path: {:?}", path);
         let out = parse_file(path);
         assert!(out.is_ok());
     }
