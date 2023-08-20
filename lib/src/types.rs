@@ -6,20 +6,20 @@ use std::rc::Rc;
 use anyhow::{bail, Result};
 use static_assertions::const_assert_eq;
 
-use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable, TableExtra};
-use crate::TransformSQL;
+#[cfg(feature = "generate")]
+use crate::generate::{hash_number_and_stringify, GenerateDummy};
+use crate::helper::get_first_element;
+use crate::parser::types::{FieldExtra, FieldType, RawDataType, RawField, RawTable};
+use crate::{TransformSQL, TransformTSQL};
 
+/// A `BTreeMap` where the key is always of type `String` and the value type is generic `T`
 pub type GenericCollection<T> = BTreeMap<String, T>;
+/// A `BTreeMap` with the type of a key is a `String` and the type of the value is a [`Table`]
 pub type TableCollection = GenericCollection<Table>;
+/// A `BTreeMap` with the type of a key is a `String` and the type of the value is a [`Rc<RefCell<RawTable>>`]
 pub(crate) type RawTableCollection = GenericCollection<Rc<RefCell<RawTable>>>;
 
-fn get_first_element<K: Ord, V>(collection: &BTreeMap<K, V>) -> Option<(&K, &V)> {
-    let key = collection.keys().next()?;
-    let item = collection.get(key)?;
-
-    Some((key, item))
-}
-
+// TODO remove `pub(crate)`
 #[derive(Debug, Default)]
 pub struct Table {
     pub(crate) extra: TableExtra,
@@ -30,6 +30,18 @@ pub struct Table {
 }
 
 impl Table {
+    pub fn new<S: Into<String>>(
+        name: S,
+        fields: HashMap<String, Field>,
+        extra: TableExtra,
+    ) -> Self {
+        Table {
+            extra,
+            name: name.into(),
+            fields,
+        }
+    }
+
     pub fn get_field(&self, key: &str) -> Option<&Field> {
         self.fields.get(key)
     }
@@ -159,13 +171,13 @@ impl Table {
 }
 
 impl TransformSQL for Table {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         writeln!(buffer, "CREATE TABLE {} (", self.name)?;
 
         let mut foreign_keys_table_fields: HashMap<String, Vec<&Field>> = HashMap::new();
 
         for field in self.fields.values() {
-            field.transform(buffer)?;
+            field.transform_into_sql(buffer)?;
 
             if field.foreign_key_reference.is_some() {
                 let table = &field.foreign_key_reference.as_ref().unwrap().0;
@@ -210,6 +222,22 @@ impl TransformSQL for Table {
     }
 }
 
+impl TransformTSQL for Table {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        self.extra.transform_into_tsql(buffer)?;
+
+        writeln!(buffer, "table {} {{", self.name)?;
+
+        for field in self.fields.values() {
+            field.transform_into_tsql(buffer)?;
+        }
+
+        writeln!(buffer, "}};")?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) name: String,
@@ -219,6 +247,22 @@ pub struct Field {
 }
 
 impl Field {
+    pub fn new<S: Into<String>>(name: S, datatype: DataType) -> Field {
+        Self::new_with_fk(name, datatype, None)
+    }
+
+    pub fn new_with_fk<S: Into<String>>(
+        name: S,
+        datatype: DataType,
+        foreign_key_reference: Option<(String, Rc<Field>)>,
+    ) -> Field {
+        Field {
+            name: name.into(),
+            datatype,
+            foreign_key_reference,
+        }
+    }
+
     fn parse(raw: &RawField) -> Result<Self> {
         Ok(Field {
             name: raw.name.to_string(),
@@ -233,11 +277,31 @@ impl Field {
 }
 
 impl TransformSQL for Field {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
         write!(buffer, "{} ", self.name)?;
-        self.datatype.transform(buffer)?;
+        self.datatype.transform_into_sql(buffer)?;
 
         Ok(())
+    }
+}
+
+impl TransformTSQL for Field {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        write!(buffer, "\t")?;
+        self.datatype.transform_into_tsql(buffer)?;
+        writeln!(buffer, " {},", self.name)?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "generate")]
+impl GenerateDummy for Field {
+    fn generate_dummy(number: usize) -> Self {
+        let name = hash_number_and_stringify(number);
+        let datatype = DataType::generate_dummy(number);
+
+        Field::new(name, datatype)
     }
 }
 
@@ -290,11 +354,10 @@ impl DataType {
             }
         }
     }
-}
 
-impl TransformSQL for DataType {
-    fn transform<W: Write>(&self, buffer: &mut W) -> Result<()> {
-        let formatted = match self {
+    // TODO maybe replace with `&'a str` if possible?
+    fn format(&self) -> String {
+        match self {
             DataType::Int => "int".to_string(),
             DataType::Bool => "boolean".to_string(),
             DataType::BigInt => "bigint".to_string(),
@@ -310,9 +373,76 @@ impl TransformSQL for DataType {
             DataType::Text(args) => format!("text({})", args),
 
             DataType::Decimal(precision, scale) => format!("decimal({}, {})", precision, scale),
-        };
+        }
+    }
+}
+
+impl TransformSQL for DataType {
+    fn transform_into_sql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        let formatted = self.format();
 
         writeln!(buffer, "{},", formatted)?;
+
+        Ok(())
+    }
+}
+
+impl TransformTSQL for DataType {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        write!(buffer, "{}", self.format())?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "generate")]
+impl GenerateDummy for DataType {
+    fn generate_dummy(number: usize) -> Self {
+        // TODO add more variants
+        const DATATYPES: &[DataType] = &[
+            DataType::Int,
+            DataType::Double,
+            DataType::VarChar(100),
+            DataType::Char(6),
+            DataType::Uuid,
+        ];
+
+        DATATYPES[number % DATATYPES.len()]
+    }
+}
+
+/// Holds metadata for a [`Table`]
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct TableExtra {
+    primary_key: Vec<String>,
+}
+
+impl TableExtra {
+    pub fn new_with_pk<S: Into<String> + Clone>(primary_key: Vec<S>) -> Self {
+        TableExtra {
+            primary_key: primary_key
+                .iter()
+                // TODO remove call to `.clone()`
+                .map(|item| item.clone().into())
+                .collect::<Vec<_>>(),
+            ..Self::default()
+        }
+    }
+
+    pub fn primary_key(&self) -> &Vec<String> {
+        &self.primary_key
+    }
+
+    pub fn primary_key_mut(&mut self) -> &mut Vec<String> {
+        &mut self.primary_key
+    }
+}
+
+impl TransformTSQL for TableExtra {
+    fn transform_into_tsql<W: Write>(&self, buffer: &mut W) -> Result<()> {
+        if !self.primary_key.is_empty() {
+            writeln!(buffer, "@primary_key({})", self.primary_key.join(", "))?;
+        }
 
         Ok(())
     }

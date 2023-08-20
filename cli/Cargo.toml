@@ -8,6 +8,10 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "generate_tsql"
+path = "./bin/generate_tsql.rs"
+
 [dependencies]
-tsql = { version = "0.1.0", path = "../lib" }
+tsql = { version = "0.1.0", path = "../lib", features = ["generate"] }
 pico-args = "0.5.0"
